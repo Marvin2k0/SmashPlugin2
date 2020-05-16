@@ -1,0 +1,13 @@
+name: Smash_by_Marvin2k0
+author: Marvin2k0
+version: 1.0
+main: de.marvin2k0.smash.Smash
+api-version: 1.15
+commands:
+  smash:
+    permission: smash
+  setlobby:
+    permission: smash.setlobby
+  setspawn:
+    permission: smas.setspawn
+  test:
