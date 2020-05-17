@@ -6,14 +6,18 @@ import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Game
 {
+    public static Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    public static Objective objective = scoreboard.registerNewObjective("damage", "dummy");
+    private static Team team = scoreboard.registerNewTeam("damage");
+    public static HashMap<GamePlayer, ArmorStand> armorstands = new HashMap<>();
     public static ArrayList<Game> games = new ArrayList<>();
     public static ArrayList<GamePlayer> gameplayers = new ArrayList<>();
     private static ArrayList<Player> players = new ArrayList<>();
@@ -32,6 +36,8 @@ public class Game
         this.name = name;
         this.hasStarted = false;
         this.inGame = false;
+
+        objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
     }
 
     public void join(Player player)
@@ -56,7 +62,7 @@ public class Game
 
         Smash.plugin.reloadConfig();
 
-        if (!config.isSet("games." + getName() + ".lobby")  || !config.isSet("games." + getName() + ".spawn"))
+        if (!config.isSet("games." + getName() + ".lobby") || !config.isSet("games." + getName() + ".spawn"))
         {
             player.sendMessage(Text.get("lobbynotset"));
             return;
@@ -128,7 +134,24 @@ public class Game
         inGame = true;
 
         for (GamePlayer gp : gameplayers)
+        {
+            team.addPlayer(gp.getPlayer());
+            gp.getPlayer().setAllowFlight(true);
+            setDamageTag(gp);
+
+            gp.getPlayer().setScoreboard(scoreboard);
             gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+        }
+    }
+
+    public void setDamageTag(GamePlayer gp)
+    {
+        String name = gp.getName();
+
+        objective.setDisplayName("%");
+        objective.getScore(name).setScore(1);
+
+        gp.getPlayer().setScoreboard(scoreboard);
     }
 
     private void start()
@@ -177,6 +200,7 @@ public class Game
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+        player.setAllowFlight(false);
         gp.teleportBack();
 
         if (check)

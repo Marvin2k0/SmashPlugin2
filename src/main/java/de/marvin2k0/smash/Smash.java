@@ -2,14 +2,17 @@ package de.marvin2k0.smash;
 
 import de.marvin2k0.smash.commands.SmashCommand;
 import de.marvin2k0.smash.game.Game;
+import de.marvin2k0.smash.game.GameListener;
 import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
 import de.marvin2k0.smash.item.UseListener;
+import de.marvin2k0.smash.item.items.DiamondSword;
 import de.marvin2k0.smash.item.items.SpeedSugar;
 import de.marvin2k0.smash.listener.SignListener;
 import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -42,6 +45,14 @@ public class Smash extends JavaPlugin
 
         getServer().getPluginManager().registerEvents(new SignListener(), this);
         getServer().getPluginManager().registerEvents(new UseListener(), this);
+        getServer().getPluginManager().registerEvents(new GameListener(), this);
+    }
+
+    @Override
+    public void onDisable()
+    {
+        for (Player p : Bukkit.getOnlinePlayers())
+            p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
 
     @Override
@@ -86,8 +97,7 @@ public class Smash extends JavaPlugin
 
         else if (label.equalsIgnoreCase("test"))
         {
-            SmashItem speedSugar = new SpeedSugar(ItemUtils.create(Material.SUGAR, "§9Speed"));
-
+            SmashItem speedSugar = new DiamondSword(ItemUtils.create(Material.DIAMOND_SWORD, "§bSword"));
             speedSugar.drop(player.getLocation());
             player.sendMessage("§9dropped!");
             return true;

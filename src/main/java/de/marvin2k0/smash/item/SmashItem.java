@@ -4,6 +4,7 @@ import de.marvin2k0.smash.game.GamePlayer;
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public abstract class SmashItem
         loc.getWorld().dropItemNaturally(loc, item);
     }
 
-    public abstract void onUse(GamePlayer player);
+    public abstract void onUse(GamePlayer player, Action action);
 
     public static SmashItem getSmashItem(ItemStack item)
     {

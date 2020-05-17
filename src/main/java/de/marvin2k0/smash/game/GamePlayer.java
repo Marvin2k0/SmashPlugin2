@@ -8,11 +8,11 @@ import org.bukkit.inventory.ItemStack;
 public class GamePlayer
 {
     private Game game;
+    private double damage;
     private Player player;
     private Location location;
     private ItemStack[] inventory;
     public boolean inLobby = true;
-    private String role;
 
     public GamePlayer(Game game, Player player, Location location, ItemStack[] inventory)
     {
@@ -20,27 +20,23 @@ public class GamePlayer
         this.player = player;
         this.location = location;
         this.inventory = inventory;
-        this.role = "Zufällig";
+        this.damage = 0;
 
         if (!Smash.gameplayers.containsKey(player))
             Smash.gameplayers.put(player, this);
     }
 
-    public String getRole()
+    public void addDamage(double damage)
     {
-        return role;
+        this.damage += damage;
+
+        if (this.damage < 0)
+            this.damage = 0;
     }
 
-    public void addHase()
+    public double getDamage()
     {
-        Smash.plugin.getConfig().set("stats." + player.getUniqueId() + ".hase", Smash.plugin.getConfig().getInt("stats." + player.getUniqueId() + ".hase") + 1);
-        Smash.plugin.saveConfig();
-    }
-
-    public void addHunter()
-    {
-        Smash.plugin.getConfig().set("stats." + player.getUniqueId() + ".hunter", Smash.plugin.getConfig().getInt("stats." + player.getUniqueId() + ".hunter") + 1);
-        Smash.plugin.saveConfig();
+        return Double.valueOf(Math.floor(damage * 100) / 100);
     }
 
     public void teleportBack()

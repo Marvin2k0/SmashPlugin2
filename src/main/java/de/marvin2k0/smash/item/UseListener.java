@@ -19,6 +19,8 @@ public class UseListener implements Listener
 
         ItemStack item = event.getItem();
 
+        System.out.println(SmashItem.getItems().contains(item));
+
         if (!SmashItem.getItems().contains(item))
             return;
 
@@ -30,6 +32,6 @@ public class UseListener implements Listener
         SmashItem smashItem = SmashItem.getSmashItem(item);
         GamePlayer gp = Smash.gameplayers.get(player);
 
-        smashItem.onUse(gp);
+        smashItem.onUse(gp, event.getAction());
     }
 }
