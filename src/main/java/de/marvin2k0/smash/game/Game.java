@@ -27,7 +27,7 @@ public class Game
 
     private String name;
     private boolean hasStarted;
-    private boolean inGame;
+    public boolean inGame;
     public GamePlayer hunter;
     private CountdownTimer timer;
 
@@ -149,7 +149,7 @@ public class Game
         String name = gp.getName();
 
         objective.setDisplayName("%");
-        objective.getScore(name).setScore(1);
+        objective.getScore(name).setScore(0);
 
         gp.getPlayer().setScoreboard(scoreboard);
     }
@@ -194,7 +194,6 @@ public class Game
     public void leave(GamePlayer gp, boolean check)
     {
         Player player = gp.getPlayer();
-
 
         player.setGameMode(GameMode.SURVIVAL);
         player.getInventory().clear();
