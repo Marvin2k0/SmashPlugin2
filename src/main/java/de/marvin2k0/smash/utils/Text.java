@@ -26,18 +26,18 @@ public class Text
 
         config.options().copyDefaults(true);
         config.addDefault("prefix", "&8[&9Smash&8]&f");
-        config.addDefault("noplayer", "&7This command is only for players");
-        config.addDefault("lobbyset", "&7Lobby has been set for game &b%game%");
-        config.addDefault("spawnset", "&7Spawn has been set for game &b%game%!");
-        config.addDefault("alreadyingame", "&7You are already in a game!");
-        config.addDefault("notingame", "&7You are not in a game!");
-        config.addDefault("lobbynotset", "&7Not all spawns have been set for this game!");
-        config.addDefault("joinmessage", "&7[&a+&7] &b%player% &7joined the game.");
-        config.addDefault("gamefull", "&7This game is full!");
-        config.addDefault("alreadystarted", "&7Game has already started!");
-        config.addDefault("countdown", "&7Game starts in &9%seconds% &7seconds");
-        config.addDefault("dead", "&7%player% died");
-        config.addDefault("murdered", "&7%player% &7was killed by %killer%");
+        config.addDefault("noplayer", "&7Dieser Befehl ist nur für Spieler!");
+        config.addDefault("lobbyset", "&7Lobby wurde für Spiel &b%game% &7gesetzt!");
+        config.addDefault("spawnset", "&7Spawn wurde für Spiel &b%game% &7gesetzt!");
+        config.addDefault("alreadyingame", "&7Du bist schon in einem Spiel!");
+        config.addDefault("notingame", "&7Du bist in keinem Spiel!");
+        config.addDefault("lobbynotset", "&7Es wurden noch nicht alle Spawns für dieses Spiel gesetzt!");
+        config.addDefault("joinmessage", "&7[&a+&7] &b%player% &7hat das Spiel betreten.");
+        config.addDefault("gamefull", "&7Das Spiel ist voll!");
+        config.addDefault("alreadystarted", "&7Das Spiel hat schon angefangen!");
+        config.addDefault("countdown", "&7Spiel startet in &9%seconds% &7Sekunden");
+        config.addDefault("dead", "&7%player% ist gestorben");
+        config.addDefault("murdered", "&7%player% &7wurde von %killer% getötet");
         config.addDefault("minplayers", 3);
         config.addDefault("maxplayers", 8);
 

@@ -19,8 +19,6 @@ public class UseListener implements Listener
 
         ItemStack item = event.getItem();
 
-        System.out.println(SmashItem.getItems().contains(item));
-
         if (!SmashItem.getItems().contains(item))
             return;
 

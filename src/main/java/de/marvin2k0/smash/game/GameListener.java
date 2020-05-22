@@ -4,6 +4,7 @@ import com.sun.media.jfxmediaimpl.HostUtils;
 import de.marvin2k0.smash.Smash;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -12,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -25,6 +25,7 @@ import java.util.ArrayList;
 public class GameListener implements Listener
 {
     private ArrayList<Player> jump = new ArrayList<>();
+    private ArrayList<GamePlayer> cooldown = new ArrayList<>();
 
     @EventHandler
     public void onGrap(PlayerInteractEntityEvent event)
@@ -74,8 +75,6 @@ public class GameListener implements Listener
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event)
     {
-        //TODO: durability anpassen
-
         if (!(event.getEntity() instanceof Player))
             return;
 
@@ -120,13 +119,25 @@ public class GameListener implements Listener
         if (item != null)
         {
             if (item.getType() == Material.DIAMOND_SWORD)
+            {
                 damage = 0.16;
+                item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+            }
             else if (item.getType() == Material.WOODEN_SWORD || item.getType() == Material.GOLDEN_SWORD)
+            {
                 damage = 0.1;
+                item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+            }
             else if (item.getType() == Material.STONE_SWORD)
+            {
                 damage = 0.12;
+                item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+            }
             else if (item.getType() == Material.IRON_SWORD)
+            {
                 damage = 0.14;
+                item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+            }
         }
 
         gp.addDamage(damage == 0 ? 0.05 : damage);
@@ -189,10 +200,39 @@ public class GameListener implements Listener
     {
         Player player = event.getPlayer();
 
+        if (!Game.inGame(player))
+        {
+            player.setAllowFlight(false);
+            return;
+        }
+
         if (jump.contains(player) && player.isOnGround())
         {
             jump.remove(player);
             player.setAllowFlight(true);
+        }
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+
+        if (gp.getGame().inGame && player.isOnGround() && !cooldown.contains(gp))
+        {
+            if (gp.getGame().itemSpawns.size() >= 10)
+            {
+                gp.getGame().itemSpawns.remove(0);
+            }
+
+            Location location = player.getLocation();
+
+            for (Location loc : gp.getGame().itemSpawns)
+            {
+                if (loc.distance(location) <= 8)
+                    return;
+            }
+
+            cooldown.add(gp);
+            gp.getGame().itemSpawns.add(player.getLocation());
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> cooldown.remove(gp), 10 * 20);
         }
     }
 }

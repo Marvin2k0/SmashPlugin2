@@ -10,4 +10,4 @@ commands:
     permission: smash.setlobby
   setspawn:
     permission: smas.setspawn
-  test:
+  leave:

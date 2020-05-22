@@ -4,16 +4,11 @@ import de.marvin2k0.smash.commands.SmashCommand;
 import de.marvin2k0.smash.game.Game;
 import de.marvin2k0.smash.game.GameListener;
 import de.marvin2k0.smash.game.GamePlayer;
-import de.marvin2k0.smash.item.SmashItem;
 import de.marvin2k0.smash.item.UseListener;
-import de.marvin2k0.smash.item.items.DiamondSword;
-import de.marvin2k0.smash.item.items.SpeedSugar;
 import de.marvin2k0.smash.listener.SignListener;
-import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,7 +36,7 @@ public class Smash extends JavaPlugin
         getCommand("smash").setExecutor(new SmashCommand());
         getCommand("setspawn").setExecutor(this);
         getCommand("setlobby").setExecutor(this);
-        getCommand("test").setExecutor(this);
+        getCommand("leave").setExecutor(this);
 
         getServer().getPluginManager().registerEvents(new SignListener(), this);
         getServer().getPluginManager().registerEvents(new UseListener(), this);
@@ -51,8 +46,8 @@ public class Smash extends JavaPlugin
     @Override
     public void onDisable()
     {
-        for (Player p : Bukkit.getOnlinePlayers())
-            p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+        for (Game g : Game.games)
+            g.reset();
     }
 
     @Override
@@ -95,14 +90,19 @@ public class Smash extends JavaPlugin
             return true;
         }
 
-        else if (label.equalsIgnoreCase("test"))
+        else if (label.equalsIgnoreCase("leave"))
         {
-            SmashItem speedSugar = new DiamondSword(ItemUtils.create(Material.DIAMOND_SWORD, "§bSword"));
-            speedSugar.drop(player.getLocation());
-            player.sendMessage("§9dropped!");
+            if (!Game.inGame(player))
+            {
+                player.sendMessage(Text.get("notingame"));
+                return true;
+            }
+
+            GamePlayer gp = gameplayers.get(player);
+
+            gp.getGame().leaveCommand(gp);
             return true;
         }
-
 
         player.sendMessage("§cInvalid command §4/" + label);
         return true;

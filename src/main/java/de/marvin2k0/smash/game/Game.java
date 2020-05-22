@@ -1,6 +1,8 @@
 package de.marvin2k0.smash.game;
 
 import de.marvin2k0.smash.Smash;
+import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.item.items.*;
 import de.marvin2k0.smash.utils.CountdownTimer;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
@@ -11,6 +13,7 @@ import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 public class Game
 {
@@ -25,17 +28,23 @@ public class Game
     private static int MIN_PLAYERS = Integer.valueOf(Text.get("minplayers", false));
     private static int MAX_PLAYERS = Integer.valueOf(Text.get("maxplayers", false));
 
+    public ArrayList<GamePlayer> prot;
+    public ArrayList<Location> itemSpawns;
     private String name;
     private boolean hasStarted;
     public boolean inGame;
+    private int lastLoc;
     public GamePlayer hunter;
     private CountdownTimer timer;
 
     private Game(String name)
     {
+        this.prot = new ArrayList<>();
+        this.itemSpawns = new ArrayList<>();
         this.name = name;
         this.hasStarted = false;
         this.inGame = false;
+        this.lastLoc = -1;
 
         objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
     }
@@ -98,12 +107,14 @@ public class Game
 
         for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 50, 50, 50))
         {
-            if (e instanceof Arrow)
+            if (!(e instanceof Player))
                 e.remove();
         }
 
         gameplayers.clear();
         players.clear();
+        prot.clear();
+        itemSpawns.clear();
         hunter = null;
         hasStarted = false;
         inGame = false;
@@ -111,7 +122,8 @@ public class Game
 
     private void check()
     {
-
+        if (gameplayers.size() <= 1)
+            reset();
     }
 
     public void die(GamePlayer gp, Player player)
@@ -123,8 +135,6 @@ public class Game
 
     private void startGame()
     {
-        System.out.println(gameplayers.size());
-
         if (gameplayers.size() <= 1)
         {
             reset();
@@ -141,7 +151,48 @@ public class Game
 
             gp.getPlayer().setScoreboard(scoreboard);
             gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+
+            prot.add(gp);
         }
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> prot.clear(), 10 * 20);
+
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(Smash.plugin, () -> {
+            if (inGame)
+                spawnItems();
+        }, 0, 200);
+    }
+
+    String[] smashItems = {"dia", "gold", "iron", "sugar", "stone", "wood"};
+    Random random = new Random();
+
+    private void spawnItems()
+    {
+        if (itemSpawns.size() == 0)
+            return;
+
+        int randomItem = random.nextInt(smashItems.length);
+        int randomLoc = random.nextInt(itemSpawns.size());
+        String itemName = smashItems[randomItem];
+        SmashItem item = null;
+
+        while (lastLoc == randomLoc)
+            randomLoc = random.nextInt(itemSpawns.size());
+
+        switch (itemName)
+        {
+            case "dia": item = new DiamondSword(); break;
+            case "gold": item = new GoldenSword(); break;
+            case "iron": item = new IronSword(); break;
+            case "sugar": item = new SpeedSugar(); break;
+            case "stone": item = new StoneSword(); break;
+            case "wood": item = new WoodenSword(); break;
+        }
+
+        Location dropLocation = itemSpawns.get(randomLoc);
+        lastLoc = randomLoc;
+
+        item.drop(dropLocation);
     }
 
     public void setDamageTag(GamePlayer gp)
@@ -201,6 +252,8 @@ public class Game
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         player.setAllowFlight(false);
         gp.teleportBack();
+
+        Smash.gameplayers.remove(gp.getPlayer());
 
         if (check)
             check();
