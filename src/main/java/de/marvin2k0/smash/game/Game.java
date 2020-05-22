@@ -163,7 +163,7 @@ public class Game
         }, 0, 200);
     }
 
-    String[] smashItems = {"dia", "gold", "iron", "sugar", "stone", "wood"};
+    String[] smashItems = {"dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
     Random random = new Random();
 
     private void spawnItems()
@@ -176,9 +176,6 @@ public class Game
         String itemName = smashItems[randomItem];
         SmashItem item = null;
 
-        while (lastLoc == randomLoc)
-            randomLoc = random.nextInt(itemSpawns.size());
-
         switch (itemName)
         {
             case "dia": item = new DiamondSword(); break;
@@ -187,6 +184,11 @@ public class Game
             case "sugar": item = new SpeedSugar(); break;
             case "stone": item = new StoneSword(); break;
             case "wood": item = new WoodenSword(); break;
+            case "apple": item = new AppleItem(); break;
+            case "bread": item = new BreadItem(); break;
+            case "chicken": item = new ChickenItem(); break;
+            case "pork": item = new PorkItem(); break;
+            case "steak": item = new SteakItem(); break;
         }
 
         Location dropLocation = itemSpawns.get(randomLoc);
