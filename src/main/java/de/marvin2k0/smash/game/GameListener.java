@@ -2,18 +2,16 @@ package de.marvin2k0.smash.game;
 
 import com.sun.media.jfxmediaimpl.HostUtils;
 import de.marvin2k0.smash.Smash;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
@@ -73,6 +71,46 @@ public class GameListener implements Listener
     }
 
     @EventHandler
+    public void onExplode(EntityExplodeEvent event)
+    {
+        if (!(event.getEntity() instanceof Fireball))
+            return;
+
+        Fireball fireball = (Fireball) event.getEntity();
+
+        if (!(fireball.getShooter() instanceof Player))
+            return;
+
+        Player player = (Player) fireball.getShooter();
+
+        if (!Game.inGame(player))
+            return;
+
+        event.blockList().clear();
+        event.setCancelled(true);
+
+        event.getLocation().getWorld().playSound(event.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageEvent event)
+    {
+        if (!(event.getEntity() instanceof Player))
+            return;
+
+        Player player = (Player) event.getEntity();
+
+        if (!Game.inGame(player))
+            return;
+
+        event.setDamage(0);
+        GamePlayer gp = Smash.gameplayers.get(player);
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.POISON)
+            gp.addDamage(0.02);
+    }
+
+    @EventHandler
     public void onDamage(EntityDamageByEntityEvent event)
     {
         if (!(event.getEntity() instanceof Player))
@@ -95,6 +133,8 @@ public class GameListener implements Listener
 
         event.setDamage(0);
 
+        double damage = 0;
+
         if (event.getDamager() instanceof Player)
         {
             Player damager = (Player) event.getDamager();
@@ -114,7 +154,10 @@ public class GameListener implements Listener
             }
         }
 
-        double damage = 0;
+        else if (event.getDamager() instanceof Arrow)
+        {
+            damage = 0.2;
+        }
 
         if (item != null)
         {
@@ -148,7 +191,50 @@ public class GameListener implements Listener
         Game.objective.getScore(name).setScore((int) damageAfter);
 
         Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () ->
-                player.setVelocity(event.getDamager().getLocation().getDirection().multiply(gp.getDamage() * 3)), 1);
+                player.setVelocity(event.getDamager().getLocation().getDirection().normalize().multiply(gp.getDamage() * 3)), 1);
+    }
+
+    @EventHandler
+    public void onShoot(EntityShootBowEvent event)
+    {
+        if (!(event.getEntity() instanceof Player))
+            return;
+
+        Player player = (Player) event.getEntity();
+
+        if (!Game.inGame(player))
+            return;
+
+        ItemStack item = event.getBow();
+
+        System.out.println("shot");
+
+        item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 15));
+    }
+
+    @EventHandler
+    public void onPickUp(EntityPickupItemEvent event)
+    {
+        if (!(event.getEntity() instanceof Player))
+            return;
+
+        Player player = (Player) event.getEntity();
+
+        if (!Game.inGame(player))
+            return;
+
+        if (event.getItem().getItemStack().getType() != Material.BOW)
+            return;
+
+        ItemStack arrows = new ItemStack(Material.ARROW);
+        arrows.setAmount(15);
+
+        Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
+
+            player.getInventory().addItem(arrows);
+            player.updateInventory();
+
+        }, 5);
     }
 
     @EventHandler

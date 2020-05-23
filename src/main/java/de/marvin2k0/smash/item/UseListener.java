@@ -3,6 +3,7 @@ package de.marvin2k0.smash.item;
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.game.Game;
 import de.marvin2k0.smash.game.GamePlayer;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,9 +28,20 @@ public class UseListener implements Listener
         if (!Game.inGame(player))
             return;
 
+        if (item.getType() == Material.BOW)
+        {
+            return;
+        }
+
+
         SmashItem smashItem = SmashItem.getSmashItem(item);
         GamePlayer gp = Smash.gameplayers.get(player);
+        event.setCancelled(true);
 
-        smashItem.onUse(gp, event.getAction());
+        try
+        {
+            smashItem.onUse(gp, event.getAction());
+        }
+        catch(NullPointerException e) {}
     }
 }

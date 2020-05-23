@@ -9,6 +9,8 @@ import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
@@ -163,8 +165,10 @@ public class Game
         }, 0, 200);
     }
 
-    String[] smashItems = {"dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    String[] smashItems = {"bow"};
     Random random = new Random();
+
+    //smashItems = {"bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -178,6 +182,12 @@ public class Game
 
         switch (itemName)
         {
+            case "bow": item = new SimpleBowItem(); break;
+            case "jetpack": item = new JetpackItem(); break;
+            case "flower": item = new FireFlowerItem(); break;
+            case "poison": item = new PoisonItem(); break;
+            case "soup": item = new SoupItem(); break;
+            case "pearl": item = new EnderpearlItem(); break;
             case "dia": item = new DiamondSword(); break;
             case "gold": item = new GoldenSword(); break;
             case "iron": item = new IronSword(); break;

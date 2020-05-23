@@ -32,6 +32,8 @@ public class GamePlayer
 
         if (this.damage < 0)
             this.damage = 0;
+
+        Game.objective.getScore(player.getName()).setScore((int) (getDamage() * 100));
     }
 
     public double getDamage()
