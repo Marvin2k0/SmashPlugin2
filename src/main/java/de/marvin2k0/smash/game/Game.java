@@ -1,13 +1,16 @@
 package de.marvin2k0.smash.game;
 
 import de.marvin2k0.smash.Smash;
+import de.marvin2k0.smash.characters.CharacterUtils;
 import de.marvin2k0.smash.item.SmashItem;
 import de.marvin2k0.smash.item.items.*;
 import de.marvin2k0.smash.utils.CountdownTimer;
+import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
@@ -91,6 +94,7 @@ public class Game
         player.getInventory().clear();
         player.setFoodLevel(20);
         player.setHealth(player.getHealthScale());
+        player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
 
         if (players.size() >= MIN_PLAYERS && !hasStarted)
         {
@@ -149,6 +153,7 @@ public class Game
         {
             team.addPlayer(gp.getPlayer());
             gp.getPlayer().setAllowFlight(true);
+            gp.getPlayer().getInventory().clear();
             setDamageTag(gp);
 
             gp.getPlayer().setScoreboard(scoreboard);
@@ -264,6 +269,8 @@ public class Game
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         player.setAllowFlight(false);
         gp.teleportBack();
+
+        CharacterUtils.setCharacter(gp, gp.getPlayer().getUniqueId().toString());
 
         Smash.gameplayers.remove(gp.getPlayer());
 

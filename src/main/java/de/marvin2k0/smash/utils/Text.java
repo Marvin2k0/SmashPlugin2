@@ -4,6 +4,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+
 public class Text
 {
     static FileConfiguration config;
@@ -24,7 +26,12 @@ public class Text
         Text.plugin = plugin;
         Text.config = plugin.getConfig();
 
+        ArrayList<String> chars = new ArrayList<>();
+        chars.add("Marvin2k0");
+        chars.add("Marvin2909");
+
         config.options().copyDefaults(true);
+        config.addDefault("chars", chars);
         config.addDefault("prefix", "&8[&9Smash&8]&f");
         config.addDefault("noplayer", "&7Dieser Befehl ist nur für Spieler!");
         config.addDefault("lobbyset", "&7Lobby wurde für Spiel &b%game% &7gesetzt!");
@@ -38,6 +45,7 @@ public class Text
         config.addDefault("countdown", "&7Spiel startet in &9%seconds% &7Sekunden");
         config.addDefault("dead", "&7%player% ist gestorben");
         config.addDefault("murdered", "&7%player% &7wurde von %killer% getötet");
+        config.addDefault("charinvname", "&9Charakterauswahl");
         config.addDefault("minplayers", 3);
         config.addDefault("maxplayers", 8);
 

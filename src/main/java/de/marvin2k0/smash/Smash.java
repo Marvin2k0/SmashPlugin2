@@ -8,7 +8,6 @@ import de.marvin2k0.smash.item.UseListener;
 import de.marvin2k0.smash.listener.SignListener;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

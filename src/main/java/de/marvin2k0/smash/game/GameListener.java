@@ -2,7 +2,11 @@ package de.marvin2k0.smash.game;
 
 import com.sun.media.jfxmediaimpl.HostUtils;
 import de.marvin2k0.smash.Smash;
+import de.marvin2k0.smash.characters.CharacterUtils;
+import de.marvin2k0.smash.utils.Text;
+import org.apache.commons.lang.CharUtils;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
@@ -12,13 +16,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class GameListener implements Listener
 {
@@ -207,8 +212,6 @@ public class GameListener implements Listener
 
         ItemStack item = event.getBow();
 
-        System.out.println("shot");
-
         item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 15));
     }
 
@@ -320,6 +323,87 @@ public class GameListener implements Listener
 
             Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> cooldown.remove(gp), 10 * 20);
         }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!event.hasItem())
+            return;
+
+        ItemStack item = event.getItem();
+
+        if (!item.hasItemMeta())
+            return;
+
+        if (item.getType() != Material.NETHER_STAR && item.getItemMeta().getDisplayName().equals("§9Charakter wählen"))
+            return;
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        Game game = gp.getGame();
+
+        if (game.inGame)
+            return;
+
+        CharacterUtils.openInv(gp);
+    }
+
+    @EventHandler
+    public void onLeave(PlayerQuitEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        gp.getGame().leaveCommand(gp);
+    }
+
+    @EventHandler
+    public void onClick(InventoryClickEvent event)
+    {
+        Player player = (Player) event.getWhoClicked();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        Game game = gp.getGame();
+
+        if (game.inGame)
+            return;
+
+        event.setCancelled(true);
+
+        if (event.getCurrentItem() == null)
+            return;
+
+        ItemStack item = event.getCurrentItem();
+
+        if (item.getType() == Material.PLAYER_HEAD && event.getView().getTitle().equals(Text.get("charinvname", false)))
+        {
+            SkullMeta meta = (SkullMeta) item.getItemMeta();
+            String owner = meta.getOwningPlayer().getUniqueId().toString();
+
+            CharacterUtils.setCharacter(gp, owner);
+        }
+    }
+    
+    @EventHandler
+    public void onDrop(PlayerDropItemEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        event.setCancelled(true);
     }
 }
 
