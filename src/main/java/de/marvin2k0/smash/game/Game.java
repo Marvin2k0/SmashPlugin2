@@ -104,17 +104,17 @@ public class Game
 
     public void reset()
     {
-        for (GamePlayer gp : gameplayers)
-        {
-            leave(gp, false);
-        }
-
         Location spawn = Locations.get("games." + getName() + ".lobby");
 
         for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 50, 50, 50))
         {
             if (!(e instanceof Player))
                 e.remove();
+        }
+
+        for (GamePlayer gp : gameplayers)
+        {
+            leave(gp, false);
         }
 
         gameplayers.clear();
@@ -170,10 +170,10 @@ public class Game
         }, 0, 200);
     }
 
-    String[] smashItems = {"bow"};
+    String[] smashItems = {"shotbow"};
     Random random = new Random();
 
-    //smashItems = {"bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -187,6 +187,7 @@ public class Game
 
         switch (itemName)
         {
+            case "shotbow": item = new ShotBowItem(); break;
             case "bow": item = new SimpleBowItem(); break;
             case "jetpack": item = new JetpackItem(); break;
             case "flower": item = new FireFlowerItem(); break;

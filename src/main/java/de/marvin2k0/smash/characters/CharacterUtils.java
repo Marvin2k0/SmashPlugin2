@@ -13,6 +13,7 @@ import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.IllegalPluginAccessException;
 
 import java.util.ArrayList;
 
@@ -39,33 +40,41 @@ public class CharacterUtils
             gp.getProperties().put(skin.getSkinName(), new Property(skin.getSkinName(), skin.getSkinValue(), skin.getSkinSignatur()));
         }
 
-        Bukkit.getScheduler().runTaskLater(Smash.plugin, new Runnable()
+        try
         {
-
-            @Override
-            public void run()
+            Bukkit.getScheduler().runTaskLater(Smash.plugin, new Runnable()
             {
-                for (Player pl : Bukkit.getOnlinePlayers())
+
+                @Override
+                public void run()
                 {
-                    pl.hidePlayer(player.getPlayer());
+                    for (Player pl : Bukkit.getOnlinePlayers())
+                    {
+                        pl.hidePlayer(player.getPlayer());
+                    }
+
                 }
+            }, 1);
 
-            }
-        }, 1);
+            Bukkit.getScheduler().runTaskLater(Smash.plugin, new Runnable()
+            {
 
-        Bukkit.getScheduler().runTaskLater(Smash.plugin, new Runnable()
+                @Override
+                public void run()
+                {
+                    for (Player pl : Bukkit.getOnlinePlayers())
+                    {
+                        pl.showPlayer(player.getPlayer());
+                    }
+
+                }
+            }, 20);
+        }
+        catch (IllegalPluginAccessException e)
         {
-
-            @Override
-            public void run()
-            {
-                for (Player pl : Bukkit.getOnlinePlayers())
-                {
-                    pl.showPlayer(player.getPlayer());
-                }
-
-            }
-        }, 20);
+            Bukkit.getConsoleSender().sendMessage("§4COULD NOT CHANGE PLAYER SKIN BACK TO NORMAL FOR PLAYER " + player.getName() + " PLEASE MAKE SURE YOU DON'T RELOAD THE SERVER WHEN SMASH GAMES ARE RUNNING!!!");
+            player.getPlayer().kickPlayer("§4Skin error, please rejoin");
+        }
     }
 
     private static ArrayList<ItemStack> getHeads()

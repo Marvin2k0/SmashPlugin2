@@ -4,13 +4,12 @@ import com.sun.media.jfxmediaimpl.HostUtils;
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.characters.CharacterUtils;
 import de.marvin2k0.smash.utils.Text;
+import net.minecraft.server.v1_15_R1.EntityArrow;
 import org.apache.commons.lang.CharUtils;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftArrow;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Fireball;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -20,6 +19,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -213,6 +213,17 @@ public class GameListener implements Listener
         ItemStack item = event.getBow();
 
         item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 15));
+
+        if (!item.getItemMeta().getDisplayName().equals("§9Shotbow"))
+            return;
+        else
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                Arrow arrow = player.launchProjectile(Arrow.class);
+                arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+            }
+        }
     }
 
     @EventHandler
@@ -225,6 +236,12 @@ public class GameListener implements Listener
 
         if (!Game.inGame(player))
             return;
+
+        if (event.getItem().getItemStack().getType() == Material.ARROW)
+        {
+            event.setCancelled(true);
+            return;
+        }
 
         if (event.getItem().getItemStack().getType() != Material.BOW)
             return;
@@ -393,8 +410,10 @@ public class GameListener implements Listener
 
             CharacterUtils.setCharacter(gp, owner);
         }
+
+        player.closeInventory();
     }
-    
+
     @EventHandler
     public void onDrop(PlayerDropItemEvent event)
     {
