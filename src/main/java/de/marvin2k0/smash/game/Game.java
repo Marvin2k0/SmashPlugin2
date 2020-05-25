@@ -95,6 +95,7 @@ public class Game
         player.setFoodLevel(20);
         player.setHealth(player.getHealthScale());
         player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
+        player.setGameMode(GameMode.SURVIVAL);
 
         if (players.size() >= MIN_PLAYERS && !hasStarted)
         {
@@ -170,10 +171,10 @@ public class Game
         }, 0, 200);
     }
 
-    String[] smashItems = {"rod"};
+    String[] smashItems = {"monster"};
     Random random = new Random();
 
-    //smashItems = {"rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -187,6 +188,8 @@ public class Game
 
         switch (itemName)
         {
+            case "monster": item = new MonsterSpawnItem(); break;
+            case "ice": item = new SlowIceItem(); break;
             case "rod": item = new RodItem(); break;
             case "shotbow": item = new ShotBowItem(); break;
             case "bow": item = new SimpleBowItem(); break;
