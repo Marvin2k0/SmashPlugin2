@@ -36,6 +36,11 @@ public abstract class SmashItem
         loc.getWorld().dropItemNaturally(loc, item);
     }
 
+    public void onUse(GamePlayer player, Location interacted, Action action)
+    {
+        onUse(player, action);
+    }
+
     public abstract void onUse(GamePlayer player, Action action);
 
     public static SmashItem getSmashItem(ItemStack item)
