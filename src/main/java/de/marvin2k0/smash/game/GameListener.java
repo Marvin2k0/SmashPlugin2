@@ -43,6 +43,9 @@ public class GameListener implements Listener
         if (!gp.getGame().inGame)
             return;
 
+        if (player.getItemInHand().getType() != Material.AIR)
+            return;
+
         if (!(event.getRightClicked() instanceof Player))
             return;
 
@@ -267,7 +270,6 @@ public class GameListener implements Listener
 
         GamePlayer gp = Smash.gameplayers.get(player);
 
-        if (!gp.getGame().inGame)
             event.setCancelled(true);
     }
 
@@ -281,7 +283,6 @@ public class GameListener implements Listener
 
         GamePlayer gp = Smash.gameplayers.get(player);
 
-        if (!gp.getGame().inGame)
             event.setCancelled(true);
     }
 
@@ -368,6 +369,35 @@ public class GameListener implements Listener
             return;
 
         CharacterUtils.openInv(gp);
+    }
+
+    @EventHandler
+    public void onFish(PlayerFishEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+
+        if (event.getState() == PlayerFishEvent.State.CAUGHT_ENTITY)
+        {
+            if (!(event.getCaught() instanceof Player))
+                return;
+
+            Player p = (Player) event.getCaught();
+
+            if (!Game.inGame(p))
+                return;
+
+            GamePlayer caught = Smash.gameplayers.get(p);
+            ItemStack item = player.getItemInHand();
+            item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 3));
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () ->
+                    p.setVelocity(player.getLocation().getDirection().normalize().multiply(caught.getDamage() * -5 - 0.5)), 1);
+        }
     }
 
     @EventHandler

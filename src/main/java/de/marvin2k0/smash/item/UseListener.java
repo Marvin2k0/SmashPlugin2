@@ -10,8 +10,18 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+
 public class UseListener implements Listener
 {
+    private static ArrayList<Material> ignore = new ArrayList<>();
+
+    public static void setUp()
+    {
+        ignore.add(Material.BOW);
+        ignore.add(Material.FISHING_ROD);
+    }
+
     @EventHandler
     public void onUse(PlayerInteractEvent event)
     {
@@ -28,10 +38,8 @@ public class UseListener implements Listener
         if (!Game.inGame(player))
             return;
 
-        if (item.getType() == Material.BOW)
-        {
+        if (ignore.contains(item.getType()))
             return;
-        }
 
 
         SmashItem smashItem = SmashItem.getSmashItem(item);

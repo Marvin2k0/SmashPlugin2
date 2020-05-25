@@ -170,10 +170,10 @@ public class Game
         }, 0, 200);
     }
 
-    String[] smashItems = {"shotbow"};
+    String[] smashItems = {"rod"};
     Random random = new Random();
 
-    //smashItems = {"shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -187,6 +187,7 @@ public class Game
 
         switch (itemName)
         {
+            case "rod": item = new RodItem(); break;
             case "shotbow": item = new ShotBowItem(); break;
             case "bow": item = new SimpleBowItem(); break;
             case "jetpack": item = new JetpackItem(); break;

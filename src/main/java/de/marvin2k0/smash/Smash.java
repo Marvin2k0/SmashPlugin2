@@ -27,6 +27,7 @@ public class Smash extends JavaPlugin
     {
         Text.setUp(this);
         Locations.setUp(this);
+        UseListener.setUp();
 
         plugin = this;
 
