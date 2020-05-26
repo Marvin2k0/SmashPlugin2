@@ -1,19 +1,15 @@
 package de.marvin2k0.smash.game;
 
-import com.sun.media.jfxmediaimpl.HostUtils;
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.characters.CharacterUtils;
+import de.marvin2k0.smash.item.SmashItem;
 import de.marvin2k0.smash.utils.Text;
-import net.minecraft.server.v1_15_R1.EntityArrow;
-import org.apache.commons.lang.CharUtils;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftArrow;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,11 +18,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class GameListener implements Listener
 {
@@ -65,6 +59,9 @@ public class GameListener implements Listener
     {
         Player player = event.getPlayer();
 
+        if (player.hasPotionEffect(PotionEffectType.JUMP))
+            return;
+
         if (!Game.inGame(player))
             return;
 
@@ -95,7 +92,9 @@ public class GameListener implements Listener
                 if (!Game.inGame(player))
                     return;
 
-                event.setCancelled(true);
+                GamePlayer gp = Smash.gameplayers.get(player);
+
+                explode(event, gp.getGame());
             }
             else
             {
@@ -103,14 +102,35 @@ public class GameListener implements Listener
 
                 if (e.getCustomName().equals("§9Mob"))
                 {
-                    event.setCancelled(true);
+                    GamePlayer gp = SmashItem.entities.get(event.getEntity());
+
+                    if (gp == null)
+                        return;
+
+                    explode(event, gp.getGame());
                 }
             }
         }
         else
         {
-            if (event.getEntity().getCustomName().equals("§9Mob"))
-                event.setCancelled(true);
+            if (event.getEntity().getType() == EntityType.PRIMED_TNT)
+            {
+                GamePlayer gp = SmashItem.entities.get(event.getEntity());
+
+                if (gp == null)
+                    return;
+
+                explode(event, gp.getGame());
+            }
+            else if (event.getEntity().getCustomName().equals("§9Mob"))
+            {
+                GamePlayer gp = SmashItem.entities.get(event.getEntity());
+
+                if (gp == null)
+                    return;
+
+                explode(event, gp.getGame());
+            }
         }
 
         event.getLocation().getWorld().playSound(event.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
@@ -390,19 +410,35 @@ public class GameListener implements Listener
     @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event)
     {
-        Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
-            event.getBlock().breakNaturally();
-            Location loc = event.getBlock().getLocation();
-            loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1, 1);
+        if (event.getEntityType() == EntityType.FALLING_BLOCK)
+            event.setCancelled(true);
+        else
+            return;
 
-            for (Entity e : loc.getWorld().getNearbyEntities(loc, 4, 4, 4))
-            {
-                if (e instanceof Player)
+        if (event.getBlock().getType() == Material.ICE)
+        {
+            Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
+                event.getBlock().breakNaturally();
+                Location loc = event.getBlock().getLocation();
+                loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1, 1);
+
+                for (Entity e : loc.getWorld().getNearbyEntities(loc, 4, 4, 4))
                 {
-                    ((Player) e).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 8 * 20, 3), false);
+                    if (e instanceof Player)
+                    {
+                        ((Player) e).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 8 * 20, 3), false);
+                        ((Player) e).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 8 * 20, 128), false);
+                    }
                 }
-            }
-        }, 1);
+            }, 1);
+        }
+
+    }
+
+    @EventHandler
+    public void onBlockChange(EntityChangeBlockEvent event)
+    {
+
     }
 
     @EventHandler
@@ -487,6 +523,35 @@ public class GameListener implements Listener
             return;
 
         event.setCancelled(true);
+    }
+
+    private void explode(EntityExplodeEvent event, Game game)
+    {
+        event.setYield(0);
+
+        int i = 0;
+
+        for (Block block : event.blockList())
+        {
+            game.blocks.put(block.getLocation(), block.getType());
+
+            if (!(i % 3 == 0))
+            {
+                i++;
+                continue;
+            }
+
+            Location loc = block.getLocation();
+
+            FallingBlock fb = loc.getWorld().spawnFallingBlock(loc, block.getType(), (byte) block.getData());
+            fb.setDropItem(false);
+
+            Vector vector = loc.toVector().subtract(event.getEntity().getLocation().toVector()).multiply(.2).add(new Vector(0, 1, 0));
+
+            fb.setVelocity(vector);
+
+            i++;
+        }
     }
 }
 

@@ -9,6 +9,7 @@ import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
@@ -18,6 +19,7 @@ import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class Game
@@ -34,6 +36,7 @@ public class Game
     private static int MAX_PLAYERS = Integer.valueOf(Text.get("maxplayers", false));
 
     public ArrayList<GamePlayer> prot;
+    public HashMap<Location, Material> blocks;
     public ArrayList<Location> itemSpawns;
     private String name;
     private boolean hasStarted;
@@ -46,6 +49,7 @@ public class Game
     {
         this.prot = new ArrayList<>();
         this.itemSpawns = new ArrayList<>();
+        this.blocks = new HashMap<>();
         this.name = name;
         this.hasStarted = false;
         this.inGame = false;
@@ -118,13 +122,27 @@ public class Game
             leave(gp, false);
         }
 
+        resetBlocks();
+
         gameplayers.clear();
         players.clear();
         prot.clear();
+        blocks.clear();
         itemSpawns.clear();
         hunter = null;
         hasStarted = false;
         inGame = false;
+    }
+
+    public void resetBlocks()
+    {
+        for (Map.Entry<Location, Material> entry : blocks.entrySet())
+        {
+            Location loc = entry.getKey();
+            Material type = entry.getValue();
+
+            loc.getBlock().setType(type);
+        }
     }
 
     private void check()
@@ -168,13 +186,13 @@ public class Game
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Smash.plugin, () -> {
             if (inGame)
                 spawnItems();
-        }, 0, 200);
+        }, 0, 100);
     }
 
-    String[] smashItems = {"tnt"};
+    String[] smashItems = {"tnt", "reset"};
     Random random = new Random();
 
-    //smashItems = {"tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -188,16 +206,39 @@ public class Game
 
         switch (itemName)
         {
-            case "tnt": item = new TNTItem(); break;
-            case "monster": item = new MonsterSpawnItem(); break;
-            case "ice": item = new SlowIceItem(); break;
-            case "rod": item = new RodItem(); break;
-            case "shotbow": item = new ShotBowItem(); break;
-            case "bow": item = new SimpleBowItem(); break;
-            case "jetpack": item = new JetpackItem(); break;
-            case "flower": item = new FireFlowerItem(); break;
-            case "poison": item = new PoisonItem(); break;
-            case "soup": item = new SoupItem(); break;
+            case "reset":
+                item = new MapReset();
+                break;
+            case "tnt":
+                item = new TNTItem();
+                break;
+            case "monster":
+                item = new MonsterSpawnItem();
+                break;
+            case "ice":
+                item = new SlowIceItem();
+                break;
+            case "rod":
+                item = new RodItem();
+                break;
+            case "shotbow":
+                item = new ShotBowItem();
+                break;
+            case "bow":
+                item = new SimpleBowItem();
+                break;
+            case "jetpack":
+                item = new JetpackItem();
+                break;
+            case "flower":
+                item = new FireFlowerItem();
+                break;
+            case "poison":
+                item = new PoisonItem();
+                break;
+            case "soup":
+                item = new SoupItem();
+                break;
             case "pearl": item = new EnderpearlItem(); break;
             case "dia": item = new DiamondSword(); break;
             case "gold": item = new GoldenSword(); break;

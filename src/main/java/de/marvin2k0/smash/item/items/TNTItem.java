@@ -6,7 +6,9 @@ import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -22,10 +24,10 @@ public class TNTItem extends SmashItem
         super(new ItemStack(Material.TNT));
     }
 
-    @Override
-    public void onUse(GamePlayer player, Location interacted, Action action)
+    public void onUse(GamePlayer player, Action action)
     {
         player.getPlayer().setItemInHand(null);
+        Location interacted = player.getPlayer().getTargetBlockExact(8).getLocation();
 
         for (int x = 0; x < 2; x++)
         {
@@ -43,10 +45,10 @@ public class TNTItem extends SmashItem
             }
         }
 
-        time();
+        time(player);
     }
 
-    private void time()
+    private void time(GamePlayer gamePlayer)
     {
         Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
             Location loc = null;
@@ -57,8 +59,10 @@ public class TNTItem extends SmashItem
                 l.getBlock().setType(Material.AIR);
             }
 
-            loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 100, 100);
-            loc.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, loc, 1000);
+            TNTPrimed tnt = (TNTPrimed) loc.getWorld().spawnEntity(loc, EntityType.PRIMED_TNT);
+            tnt.setFuseTicks(0);
+
+            entities.put(tnt, gamePlayer);
 
             for (Entity e : loc.getWorld().getNearbyEntities(loc, 10, 10, 10))
             {
@@ -68,8 +72,6 @@ public class TNTItem extends SmashItem
 
                     if (!Game.inGame(player))
                         continue;
-
-                    System.out.println(player.getName());
 
                     GamePlayer gp = Smash.gameplayers.get(player);
                     Vector vector = loc.toVector().subtract(player.getLocation().toVector()).multiply(-1);
@@ -81,11 +83,5 @@ public class TNTItem extends SmashItem
                 }
             }
         }, 5 * 20);
-    }
-
-    @Override
-    public void onUse(GamePlayer player, Action action)
-    {
-
     }
 }

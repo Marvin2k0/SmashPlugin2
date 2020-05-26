@@ -18,6 +18,7 @@ public class SlowIceItem extends SmashItem
     @Override
     public void onUse(GamePlayer player, Action action)
     {
+        System.out.println("hi");
         Location loc = player.getPlayer().getEyeLocation();
 
         FallingBlock block = loc.getWorld().spawnFallingBlock(loc, Material.PACKED_ICE, (byte) 0);

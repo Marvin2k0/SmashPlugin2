@@ -48,7 +48,7 @@ public class UseListener implements Listener
 
         try
         {
-            smashItem.onUse(gp, event.getClickedBlock().getLocation(), event.getAction());
+            smashItem.onUse(gp, event.getAction());
         }
         catch(NullPointerException e) {}
     }

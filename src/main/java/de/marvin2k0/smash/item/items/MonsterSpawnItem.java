@@ -35,12 +35,16 @@ public class MonsterSpawnItem extends SmashItem
     @Override
     public void onUse(GamePlayer player, Action action)
     {
+        player.getPlayer().setItemInHand(null);
+
         Random random = new Random();
         int index = random.nextInt(monsters.size());
 
         Entity e = player.getPlayer().getLocation().getWorld().spawnEntity(player.getPlayer().getLocation(), monsters.get(index));
         e.setCustomNameVisible(true);
         e.setCustomName("§9Mob");
+
+        entities.put(e, player);
 
         Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> e.remove(), 20 * 20);
     }

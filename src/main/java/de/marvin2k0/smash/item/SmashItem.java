@@ -4,6 +4,7 @@ import de.marvin2k0.smash.game.GamePlayer;
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 
@@ -15,6 +16,7 @@ public abstract class SmashItem
 {
     private static HashMap<ItemStack, SmashItem> smashItems = new HashMap<>();
     private static ArrayList<ItemStack> items = new ArrayList<>();
+    public static HashMap<Entity, GamePlayer> entities = new HashMap<>();
 
     protected ItemStack item;
 
@@ -30,16 +32,11 @@ public abstract class SmashItem
         items.add(this.item);
         smashItems.put(this.item, this);
     }
-
     public void drop(Location loc)
     {
         loc.getWorld().dropItemNaturally(loc, item);
     }
 
-    public void onUse(GamePlayer player, Location interacted, Action action)
-    {
-        onUse(player, action);
-    }
 
     public abstract void onUse(GamePlayer player, Action action);
 
