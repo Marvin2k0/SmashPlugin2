@@ -100,6 +100,9 @@ public class GameListener implements Listener
             {
                 Entity e = (Entity) fireball.getShooter();
 
+                if (e == null)
+                    return;
+
                 if (e.getCustomName().equals("§9Mob"))
                 {
                     GamePlayer gp = SmashItem.entities.get(event.getEntity());
@@ -344,10 +347,7 @@ public class GameListener implements Listener
         Player player = event.getPlayer();
 
         if (!Game.inGame(player))
-        {
-            player.setAllowFlight(false);
             return;
-        }
 
         if (jump.contains(player) && player.isOnGround())
         {

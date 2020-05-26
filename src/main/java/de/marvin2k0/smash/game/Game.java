@@ -189,10 +189,10 @@ public class Game
         }, 0, 100);
     }
 
-    String[] smashItems = {"tnt", "reset"};
+    String[] smashItems = {"launcher", "reset"};
     Random random = new Random();
 
-    //smashItems = {"reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"launcher", "reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -206,6 +206,9 @@ public class Game
 
         switch (itemName)
         {
+            case "launcher":
+                item = new DiamondPickaxe();
+                break;
             case "reset":
                 item = new MapReset();
                 break;
@@ -239,18 +242,42 @@ public class Game
             case "soup":
                 item = new SoupItem();
                 break;
-            case "pearl": item = new EnderpearlItem(); break;
-            case "dia": item = new DiamondSword(); break;
-            case "gold": item = new GoldenSword(); break;
-            case "iron": item = new IronSword(); break;
-            case "sugar": item = new SpeedSugar(); break;
-            case "stone": item = new StoneSword(); break;
-            case "wood": item = new WoodenSword(); break;
-            case "apple": item = new AppleItem(); break;
-            case "bread": item = new BreadItem(); break;
-            case "chicken": item = new ChickenItem(); break;
-            case "pork": item = new PorkItem(); break;
-            case "steak": item = new SteakItem(); break;
+            case "pearl":
+                item = new EnderpearlItem();
+                break;
+            case "dia":
+                item = new DiamondSword();
+                break;
+            case "gold":
+                item = new GoldenSword();
+                break;
+            case "iron":
+                item = new IronSword();
+                break;
+            case "sugar":
+                item = new SpeedSugar();
+                break;
+            case "stone":
+                item = new StoneSword();
+                break;
+            case "wood":
+                item = new WoodenSword();
+                break;
+            case "apple":
+                item = new AppleItem();
+                break;
+            case "bread":
+                item = new BreadItem();
+                break;
+            case "chicken":
+                item = new ChickenItem();
+                break;
+            case "pork":
+                item = new PorkItem();
+                break;
+            case "steak":
+                item = new SteakItem();
+                break;
         }
 
         Location dropLocation = itemSpawns.get(randomLoc);
