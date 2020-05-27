@@ -14,26 +14,32 @@ public class SignListener implements Listener
     @EventHandler
     public void onSignClick(PlayerInteractEvent event)
     {
-        Player player = event.getPlayer();
-        Block block = event.getClickedBlock();
-
-        if (block == null)
+        try
         {
-            return;
-        }
+            Player player = event.getPlayer();
+            Block block = event.getClickedBlock();
 
-        if (block.getType().toString().contains("SIGN"))
-        {
-            Sign sign = (Sign) block.getState();
-            String line1 = sign.getLine(0);
-            String line2 = sign.getLine(1).substring(2);
-
-            if (line1.equals("§9[Smash]") && Game.exists(line2))
+            if (block == null)
             {
-                Game game = Game.getGameFromName(line2);
-                game.join(player);
                 return;
             }
+
+            if (block.getType().toString().contains("SIGN"))
+            {
+                Sign sign = (Sign) block.getState();
+                String line1 = sign.getLine(0);
+                String line2 = sign.getLine(1).substring(2);
+
+                if (line1.equals("§9[Smash]") && Game.exists(line2))
+                {
+                    Game game = Game.getGameFromName(line2);
+                    game.join(player);
+                    return;
+                }
+            }
+        }
+        catch (Exception e)
+        {
         }
     }
 

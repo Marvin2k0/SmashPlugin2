@@ -1,6 +1,7 @@
 package de.marvin2k0.smash.game;
 
 import de.marvin2k0.smash.Smash;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -13,6 +14,7 @@ public class GamePlayer
     private Location location;
     private ItemStack[] inventory;
     public boolean inLobby = true;
+    public int lives;
 
     public GamePlayer(Game game, Player player, Location location, ItemStack[] inventory)
     {
@@ -21,6 +23,7 @@ public class GamePlayer
         this.location = location;
         this.inventory = inventory;
         this.damage = 0;
+        this.lives = Integer.valueOf(Text.get("lives", false));
 
         if (!Smash.gameplayers.containsKey(player))
             Smash.gameplayers.put(player, this);
@@ -34,6 +37,16 @@ public class GamePlayer
             this.damage = 0;
 
         Game.objective.getScore(player.getName()).setScore((int) (getDamage() * 100));
+    }
+
+    public void reduceLives()
+    {
+        this.lives -= 1;
+    }
+
+    public int getLives()
+    {
+        return lives;
     }
 
     public double getDamage()

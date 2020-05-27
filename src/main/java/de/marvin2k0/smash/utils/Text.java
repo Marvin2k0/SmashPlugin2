@@ -46,6 +46,10 @@ public class Text
         config.addDefault("dead", "&7%player% ist gestorben");
         config.addDefault("murdered", "&7%player% &7wurde von %killer% getötet");
         config.addDefault("charinvname", "&9Charakterauswahl");
+        config.addDefault("death", "&9%player% &7ist gestorben!");
+        config.addDefault("wintitle", "&9%player% &7gewinnt");
+        config.addDefault("winsubtitle", "&9%player% &7 hat das Spiel gewonnen!");
+        config.addDefault("lives", 3);
         config.addDefault("minplayers", 3);
         config.addDefault("maxplayers", 8);
 

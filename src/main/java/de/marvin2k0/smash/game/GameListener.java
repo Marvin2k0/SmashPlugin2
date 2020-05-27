@@ -3,6 +3,7 @@ package de.marvin2k0.smash.game;
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.characters.CharacterUtils;
 import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -140,6 +141,38 @@ public class GameListener implements Listener
     }
 
     @EventHandler
+    public void onDeath(PlayerDeathEvent event)
+    {
+        Player player = event.getEntity().getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        Game game = gp.getGame();
+
+        game.sendMessage(Text.get("death").replace("%player%", player.getName()));
+        event.setDeathMessage("");
+
+        game.die(gp);
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        Game game = gp.getGame();
+
+        if (gp.getLives() >= 1)
+            event.setRespawnLocation(Locations.get("games." + game.getName() + ".spawn"));
+    }
+
+    @EventHandler
     public void onDamage(EntityDamageEvent event)
     {
         if (!(event.getEntity() instanceof Player))
@@ -150,7 +183,9 @@ public class GameListener implements Listener
         if (!Game.inGame(player))
             return;
 
-        event.setDamage(0);
+        if (event.getCause() != EntityDamageEvent.DamageCause.VOID)
+            event.setDamage(0);
+
         GamePlayer gp = Smash.gameplayers.get(player);
 
         if (event.getCause() == EntityDamageEvent.DamageCause.POISON)
@@ -527,6 +562,7 @@ public class GameListener implements Listener
 
     private void explode(EntityExplodeEvent event, Game game)
     {
+        System.out.println("hey");
         event.setYield(0);
 
         int i = 0;

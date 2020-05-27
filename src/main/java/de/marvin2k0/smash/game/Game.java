@@ -117,9 +117,9 @@ public class Game
                 e.remove();
         }
 
-        for (GamePlayer gp : gameplayers)
+        for (Player player : players)
         {
-            leave(gp, false);
+            leave(player, false);
         }
 
         resetBlocks();
@@ -148,14 +148,36 @@ public class Game
     private void check()
     {
         if (gameplayers.size() <= 1)
+        {
+            String winner = gameplayers.get(0).getName();
+
+            for (Player player : players)
+            {
+                player.sendTitle(Text.get("wintitle", false).replace("%player%", winner), Text.get("winsubtitle", false).replace("%player%", winner), 20, 100, 20);
+            }
+
             reset();
+        }
     }
 
-    public void die(GamePlayer gp, Player player)
+    public void die(GamePlayer gp)
     {
+        gp.reduceLives();
+        gp.addDamage(-gp.getDamage());
 
+        System.out.println(gp.getName() + " " + gp.getLives());
 
-        check();
+        if (gp.getLives() <= 0)
+        {
+            gp.getPlayer().setGameMode(GameMode.SPECTATOR);
+            gp.getPlayer().spigot().respawn();
+            gameplayers.remove(gp);
+            check();
+        }
+        else
+        {
+            gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+        }
     }
 
     private void startGame()
@@ -189,10 +211,10 @@ public class Game
         }, 0, 100);
     }
 
-    String[] smashItems = {"launcher", "reset"};
+    String[] smashItems = {"singularity", "reset"};
     Random random = new Random();
 
-    //smashItems = {"launcher", "reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    //smashItems = {"singularity", "launcher", "reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
 
     private void spawnItems()
     {
@@ -206,6 +228,9 @@ public class Game
 
         switch (itemName)
         {
+            case "singularity":
+                item = new SingularityItem();
+                break;
             case "launcher":
                 item = new DiamondPickaxe();
                 break;
@@ -322,7 +347,7 @@ public class Game
         gameplayers.remove(gp);
         players.remove(gp.getPlayer());
 
-        leave(gp, true);
+        leave(gp.getPlayer(), true);
     }
 
     public void leaveCommand(GamePlayer gp)
@@ -330,12 +355,12 @@ public class Game
         gameplayers.remove(gp);
         players.remove(gp.getPlayer());
 
-        leave(gp, true);
+        leave(gp.getPlayer(), true);
     }
 
-    public void leave(GamePlayer gp, boolean check)
+    public void leave(Player player, boolean check)
     {
-        Player player = gp.getPlayer();
+        GamePlayer gp = Smash.gameplayers.get(player);
 
         player.setGameMode(GameMode.SURVIVAL);
         player.getInventory().clear();
