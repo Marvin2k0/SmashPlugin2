@@ -44,12 +44,16 @@ public class UseListener implements Listener
 
         SmashItem smashItem = SmashItem.getSmashItem(item);
         GamePlayer gp = Smash.gameplayers.get(player);
-        event.setCancelled(true);
+
+        if (event.getItem().getType() != Material.ENDER_PEARL)
+            event.setCancelled(true);
 
         try
         {
             smashItem.onUse(gp, event.getAction());
         }
-        catch(NullPointerException e) {}
+        catch (NullPointerException ignored)
+        {
+        }
     }
 }

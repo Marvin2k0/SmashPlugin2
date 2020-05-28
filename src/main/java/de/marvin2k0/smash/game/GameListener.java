@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -154,7 +155,14 @@ public class GameListener implements Listener
         game.sendMessage(Text.get("death").replace("%player%", player.getName()));
         event.setDeathMessage("");
 
-        game.die(gp);
+        GamePlayer killer;
+
+        if (!Game.inGame(event.getEntity().getKiller()))
+            killer = null;
+        else
+            killer = Smash.gameplayers.get(event.getEntity().getKiller());
+
+        game.die(gp, killer);
     }
 
     @EventHandler
@@ -188,6 +196,12 @@ public class GameListener implements Listener
 
         GamePlayer gp = Smash.gameplayers.get(player);
 
+        if (player.isGlowing() && event.getCause() != EntityDamageEvent.DamageCause.VOID)
+        {
+            event.setCancelled(true);
+            return;
+        }
+
         if (event.getCause() == EntityDamageEvent.DamageCause.POISON)
             gp.addDamage(0.02);
     }
@@ -215,6 +229,9 @@ public class GameListener implements Listener
 
         event.setDamage(0);
 
+        if (player.isGlowing())
+            return;
+
         double damage = 0;
 
         if (event.getDamager() instanceof Player)
@@ -233,6 +250,14 @@ public class GameListener implements Listener
 
                 if (p.getUniqueId().equals(player.getUniqueId()))
                     damager.removePassenger(p);
+            }
+
+            if (Game.inGame(damager))
+            {
+                GamePlayer lastdamage = Smash.gameplayers.get(damager);
+                gp.setLastDamage(lastdamage);
+
+                Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> gp.setLastDamage(null), 15 * 20);
             }
         }
 
@@ -427,19 +452,25 @@ public class GameListener implements Listener
         if (!item.hasItemMeta())
             return;
 
-        if (item.getType() != Material.NETHER_STAR && item.getItemMeta().getDisplayName().equals("§9Charakter wählen"))
-            return;
-
         if (!Game.inGame(player))
             return;
 
         GamePlayer gp = Smash.gameplayers.get(player);
         Game game = gp.getGame();
 
+        if (item.getType() == Material.GLASS)
+        {
+            gp.protect();
+            return;
+        }
+
         if (game.inGame)
             return;
 
-        CharacterUtils.openInv(gp);
+        if (item.getType() == Material.NETHER_STAR && item.getItemMeta().getDisplayName().equals("§9Charakter wählen"))
+        {
+            CharacterUtils.openInv(gp);
+        }
     }
 
     @EventHandler
@@ -467,12 +498,6 @@ public class GameListener implements Listener
                 }
             }, 1);
         }
-
-    }
-
-    @EventHandler
-    public void onBlockChange(EntityChangeBlockEvent event)
-    {
 
     }
 
@@ -562,7 +587,6 @@ public class GameListener implements Listener
 
     private void explode(EntityExplodeEvent event, Game game)
     {
-        System.out.println("hey");
         event.setYield(0);
 
         int i = 0;

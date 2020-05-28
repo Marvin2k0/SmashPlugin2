@@ -8,6 +8,7 @@ public class SmashCommand implements CommandExecutor
 {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        return false;
+        sender.sendMessage("§9Smash§7Plugin by §9Marvin2k0");
+        return true;
     }
 }

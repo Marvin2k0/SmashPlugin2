@@ -26,11 +26,6 @@ public class Locations
 
     public static void setLocation(String path, Location location)
     {
-        if (config == null)
-        {
-            System.out.println("cnfig istn ull");
-        }
-
         config.set(path + ".world", location.getWorld().getName());
         config.set(path + ".x", location.getX());
         config.set(path + ".y", location.getY());

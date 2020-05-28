@@ -9,11 +9,8 @@ import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
-import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.*;
 
@@ -24,34 +21,35 @@ import java.util.Random;
 
 public class Game
 {
-    public static Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-    public static Objective objective = scoreboard.registerNewObjective("damage", "dummy");
-    private static Team team = scoreboard.registerNewTeam("damage");
-    public static HashMap<GamePlayer, ArmorStand> armorstands = new HashMap<>();
-    public static ArrayList<Game> games = new ArrayList<>();
-    public static ArrayList<GamePlayer> gameplayers = new ArrayList<>();
-    private static ArrayList<Player> players = new ArrayList<>();
-    private static FileConfiguration config = Smash.plugin.getConfig();
-    private static int MIN_PLAYERS = Integer.valueOf(Text.get("minplayers", false));
-    private static int MAX_PLAYERS = Integer.valueOf(Text.get("maxplayers", false));
+    public static final Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    public static final Objective objective = scoreboard.registerNewObjective("damage", "dummy");
+    private static final Team team = scoreboard.registerNewTeam("damage");
+    public static final ArrayList<Game> games = new ArrayList<>();
+    public static final ArrayList<GamePlayer> gameplayers = new ArrayList<>();
+    private static final ArrayList<Player> players = new ArrayList<>();
+    private static final FileConfiguration config = Smash.plugin.getConfig();
+    private static final int MIN_PLAYERS = Integer.parseInt(Text.get("minplayers", false));
+    private static final int MAX_PLAYERS = Integer.parseInt(Text.get("maxplayers", false));
 
     public ArrayList<GamePlayer> prot;
     public HashMap<Location, Material> blocks;
     public ArrayList<Location> itemSpawns;
-    private String name;
+    private final String name;
     private boolean hasStarted;
     public boolean inGame;
     private int lastLoc;
     public GamePlayer hunter;
     private CountdownTimer timer;
+    private boolean ranked;
 
-    private Game(String name)
+    private Game(String name, boolean ranked)
     {
         this.prot = new ArrayList<>();
         this.itemSpawns = new ArrayList<>();
         this.blocks = new HashMap<>();
         this.name = name;
         this.hasStarted = false;
+        this.ranked = ranked;
         this.inGame = false;
         this.lastLoc = -1;
 
@@ -147,7 +145,7 @@ public class Game
 
     private void check()
     {
-        if (gameplayers.size() <= 1)
+        if (gameplayers.size() == 1)
         {
             String winner = gameplayers.get(0).getName();
 
@@ -158,14 +156,25 @@ public class Game
 
             reset();
         }
+        else if (gameplayers.size() <= 0)
+            reset();
     }
 
-    public void die(GamePlayer gp)
+    public void die(GamePlayer gp, GamePlayer killer)
     {
         gp.reduceLives();
         gp.addDamage(-gp.getDamage());
 
-        System.out.println(gp.getName() + " " + gp.getLives());
+        if (ranked)
+        {
+            gp.addDeath();
+
+            if (gp.getLastDamage() != null)
+            {
+                gp.getLastDamage().addKill();
+                gp.getLastDamage().sendMessage(Text.get("killed").replace("%player%", gp.getName()));
+            }
+        }
 
         if (gp.getLives() <= 0)
         {
@@ -177,6 +186,8 @@ public class Game
         else
         {
             gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+            giveItems(gp);
+            gp.getPlayer().spigot().respawn();
         }
     }
 
@@ -196,6 +207,7 @@ public class Game
             gp.getPlayer().setAllowFlight(true);
             gp.getPlayer().getInventory().clear();
             setDamageTag(gp);
+            giveItems(gp);
 
             gp.getPlayer().setScoreboard(scoreboard);
             gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
@@ -208,13 +220,37 @@ public class Game
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Smash.plugin, () -> {
             if (inGame)
                 spawnItems();
-        }, 0, 100);
+        }, 0, 10 * 20);
     }
 
-    String[] smashItems = {"singularity", "reset"};
-    Random random = new Random();
+    String[] smashItems = {
+            "singularity", "singularity", "singularity", "singularity", "singularity",
+            "launcher", "launcher",
+            "reset",
+            "tnt", "tnt", "tnt",
+            "monster", "monster", "monster", "monster", "monster", "monster", "monster", "monster",
+            "ice", "ice", "ice", "ice",
+            "rod", "rod", "rod", "rod", "rod",
+            "shotbow", "shotbow", "shotbow",
+            "bow", "bow", "bow", "bow",
+            "jetpack", "jetpack", "jetpack",
+            "flower", "flower", "flower", "flower", "flower",
+            "poison", "poison", "poison",
+            "soup", "soup", "soup",
+            "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl",
+            "dia",
+            "gold", "gold", "gold", "gold", "gold", "gold", "gold",
+            "iron", "iron", "iron",
+            "stone", "stone", "stone", "stone", "stone",
+            "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood",
+            "sugar", "sugar", "sugar", "sugar", "sugar",
+            "apple", "apple", "apple", "apple", "apple",
+            "bread", "bread", "bread", "bread", "bread",
+            "chicken", "chicken", "chicken", "chicken", "chicken",
+            "pork", "steak", "pork", "steak", "pork", "steak", "pork", "steak", "pork", "steak"
+    };
 
-    //smashItems = {"singularity", "launcher", "reset", "tnt", "monster", "ice", "rod", "shotbow", "bow", "jetpack", "flower", "poison", "soup", "pearl", "dia", "gold", "iron", "sugar", "stone", "wood", "apple", "bread", "chicken", "pork", "steak"};
+    Random random = new Random();
 
     private void spawnItems()
     {
@@ -311,6 +347,12 @@ public class Game
         item.drop(dropLocation);
     }
 
+    private void giveItems(GamePlayer gp)
+    {
+        ItemStack schutz = ItemUtils.create(Material.GLASS, Text.get("schutzitem", false));
+        gp.getPlayer().getInventory().setItem(8, schutz);
+    }
+
     public void setDamageTag(GamePlayer gp)
     {
         String name = gp.getName();
@@ -399,11 +441,11 @@ public class Game
         return null;
     }
 
-    public static void createGame(String name)
+    public static void createGame(String name, boolean ranked)
     {
         if (!exists(name))
         {
-            Game game = new Game(name);
+            Game game = new Game(name, ranked);
             games.add(game);
         }
     }

@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.IllegalPluginAccessException;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class CharacterUtils
 {
@@ -82,11 +83,18 @@ public class CharacterUtils
         FileConfiguration config = Smash.plugin.getConfig();
         ArrayList<ItemStack> items = new ArrayList<>();
 
-        for (String name : config.getStringList("chars"))
+        for (Map.Entry<String, Object> entry : config.getConfigurationSection("chars").getValues(false).entrySet())
         {
+            String name;
+
+            if (config.isSet("chars." + entry.getKey() + ".name"))
+                name = config.getString("chars." + entry.getKey() + ".name");
+            else
+                name = entry.getKey();
+
             ItemStack head = ItemUtils.create(Material.PLAYER_HEAD, "§9" + name);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(entry.getKey()));
             head.setItemMeta(meta);
 
             items.add(head);

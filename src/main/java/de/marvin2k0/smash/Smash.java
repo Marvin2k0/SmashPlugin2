@@ -8,6 +8,8 @@ import de.marvin2k0.smash.item.UseListener;
 import de.marvin2k0.smash.listener.SignListener;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -37,6 +39,8 @@ public class Smash extends JavaPlugin
         getCommand("setspawn").setExecutor(this);
         getCommand("setlobby").setExecutor(this);
         getCommand("leave").setExecutor(this);
+        getCommand("stats").setExecutor(this);
+        getCommand("setranked").setExecutor(this);
 
         getServer().getPluginManager().registerEvents(new SignListener(), this);
         getServer().getPluginManager().registerEvents(new UseListener(), this);
@@ -69,11 +73,11 @@ public class Smash extends JavaPlugin
                 return true;
             }
 
-            Game.createGame(args[0]);
+            Game.createGame(args[0], false);
             Locations.setLocation("games." + args[0] + ".lobby", player.getLocation());
             player.sendMessage(Text.get("lobbyset").replace("%game%", args[0]));
+            saveConfig();
 
-            reloadConfig();
             return true;
         }
 
@@ -85,12 +89,48 @@ public class Smash extends JavaPlugin
                 return true;
             }
 
-            Game.createGame(args[0]);
+            Game.createGame(args[0], false);
 
             Locations.setLocation("games." + args[0] + ".spawn", player.getLocation());
             player.sendMessage(Text.get("spawnset").replace("%game%", args[0]));
 
-            reloadConfig();
+            return true;
+        }
+
+        else if (label.equals("setranked"))
+        {
+            if (args.length != 2)
+            {
+                player.sendMessage("§cUsage: /setranked <game> <true|false>");
+                return true;
+            }
+
+            boolean ranked = Boolean.parseBoolean(args[1]);
+
+            getConfig().set("games." + args[0] + ".ranked", ranked);
+            saveConfig();
+            return true;
+        }
+
+        else if (label.equals("stats"))
+        {
+            OfflinePlayer target = player;
+
+            if (args.length >= 1)
+                target = Bukkit.getOfflinePlayer(args[0]);
+
+            int kills = 0;
+
+            if (GamePlayer.config.isSet(target.getUniqueId() + ".kills"))
+                kills = GamePlayer.config.getInt(target.getUniqueId() + ".kills");
+
+            int deaths = 0;
+
+            if (GamePlayer.config.isSet(target.getUniqueId() + ".deaths"))
+                deaths = GamePlayer.config.getInt(target.getUniqueId() + ".deaths");
+
+            player.sendMessage(Text.get("kills").replace("%player%", target.getName()).replace("%kills%", kills + ""));
+            player.sendMessage(Text.get("deaths").replace("%player%", target.getName()).replace("%deaths%", deaths + ""));
             return true;
         }
 
@@ -121,7 +161,7 @@ public class Smash extends JavaPlugin
 
         for (Map.Entry<String, Object> entry : section.entrySet())
         {
-            Game.createGame(entry.getKey());
+            Game.createGame(entry.getKey(), getConfig().getBoolean("games." + entry.getKey() + ".ranked"));
             System.out.println("Loaded game " + entry.getKey());
         }
     }

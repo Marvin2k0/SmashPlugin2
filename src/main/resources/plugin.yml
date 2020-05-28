@@ -9,5 +9,10 @@ commands:
   setlobby:
     permission: smash.setlobby
   setspawn:
-    permission: smas.setspawn
+    permission: smash.setspawn
   leave:
+    permission: smash.leave
+  setranked:
+    permission: smash.setranked
+  stats:
+    permission: smash.stats
