@@ -43,6 +43,7 @@ public class MonsterSpawnItem extends SmashItem
         Entity e = player.getPlayer().getLocation().getWorld().spawnEntity(player.getPlayer().getLocation(), monsters.get(index));
         e.setCustomNameVisible(true);
         e.setCustomName("§9Mob");
+        e.setInvulnerable(true);
 
         entities.put(e, player);
 

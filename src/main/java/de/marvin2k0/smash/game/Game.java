@@ -235,7 +235,6 @@ public class Game
             "bow", "bow", "bow", "bow",
             "jetpack", "jetpack", "jetpack",
             "flower", "flower", "flower", "flower", "flower",
-            "poison", "poison", "poison",
             "soup", "soup", "soup",
             "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl",
             "dia",
@@ -296,9 +295,6 @@ public class Game
                 break;
             case "flower":
                 item = new FireFlowerItem();
-                break;
-            case "poison":
-                item = new PoisonItem();
                 break;
             case "soup":
                 item = new SoupItem();
