@@ -28,6 +28,7 @@ public class GameListener implements Listener
 {
     private ArrayList<Player> jump = new ArrayList<>();
     private ArrayList<GamePlayer> cooldown = new ArrayList<>();
+    public static ArrayList<Player> arr = new ArrayList<>();
 
     @EventHandler
     public void onGrap(PlayerInteractEntityEvent event)
@@ -76,7 +77,7 @@ public class GameListener implements Listener
         if (!jump.contains(player))
         {
             jump.add(player);
-            player.setVelocity(player.getLocation().getDirection().multiply(2).add(new Vector(0, 1, 0)));
+            player.setVelocity(player.getLocation().getDirection().add(new Vector(0, 1, 0)));
         }
     }
 
@@ -141,28 +142,14 @@ public class GameListener implements Listener
         event.getLocation().getWorld().playSound(event.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
     }
 
-    @EventHandler
-    public void onDeath(PlayerDeathEvent event)
+    public void death(Player player)
     {
-        Player player = event.getEntity().getPlayer();
-
-        if (!Game.inGame(player))
-            return;
-
         GamePlayer gp = Smash.gameplayers.get(player);
         Game game = gp.getGame();
 
         game.sendMessage(Text.get("death").replace("%player%", player.getName()));
-        event.setDeathMessage("");
 
-        GamePlayer killer;
-
-        if (!Game.inGame(event.getEntity().getKiller()))
-            killer = null;
-        else
-            killer = Smash.gameplayers.get(event.getEntity().getKiller());
-
-        game.die(gp, killer);
+        game.die(gp);
     }
 
     @EventHandler
@@ -257,7 +244,20 @@ public class GameListener implements Listener
                 GamePlayer lastdamage = Smash.gameplayers.get(damager);
                 gp.setLastDamage(lastdamage);
 
-                Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> gp.setLastDamage(null), 15 * 20);
+                new BukkitRunnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (gp.getLastDamage() != lastdamage)
+                        {
+                            this.cancel();
+                            return;
+                        }
+
+                        gp.setLastDamage(null);
+                    }
+                }.runTaskLater(Smash.plugin, 15 * 20);
             }
         }
 
@@ -272,21 +272,33 @@ public class GameListener implements Listener
             {
                 damage = 0.16;
                 item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+
+                if (item.getDurability() >= 100)
+                    GameListener.arr.remove(player);
             }
             else if (item.getType() == Material.WOODEN_SWORD || item.getType() == Material.GOLDEN_SWORD)
             {
                 damage = 0.1;
                 item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+
+                if (item.getDurability() >= 100)
+                    GameListener.arr.remove(player);
             }
             else if (item.getType() == Material.STONE_SWORD)
             {
                 damage = 0.12;
                 item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+
+                if (item.getDurability() >= 100)
+                    GameListener.arr.remove(player);
             }
             else if (item.getType() == Material.IRON_SWORD)
             {
                 damage = 0.14;
                 item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
+
+                if (item.getDurability() >= 100)
+                    GameListener.arr.remove(player);
             }
         }
 
@@ -429,13 +441,20 @@ public class GameListener implements Listener
             for (Location loc : gp.getGame().itemSpawns)
             {
                 if (loc.distance(location) <= 8)
-                    return;
+                    break;
             }
 
             cooldown.add(gp);
             gp.getGame().itemSpawns.add(player.getLocation());
 
             Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> cooldown.remove(gp), 10 * 20);
+        }
+
+        Game game = Smash.gameplayers.get(player).getGame();
+
+        if (player.getLocation().getY() <= game.getLevel())
+        {
+            death(player);
         }
     }
 
@@ -474,6 +493,29 @@ public class GameListener implements Listener
     }
 
     @EventHandler
+    public void onPickUp(PlayerPickupItemEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (!Game.inGame(player))
+            return;
+
+        GamePlayer gp = Smash.gameplayers.get(player);
+        Game game = gp.getGame();
+
+        if (!game.inGame)
+            return;
+
+        if (arr.contains(player))
+        {
+            event.setCancelled(true);
+            return;
+        }
+
+        arr.add(player);
+    }
+
+    @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event)
     {
         if (event.getEntityType() == EntityType.FALLING_BLOCK)
@@ -481,7 +523,10 @@ public class GameListener implements Listener
         else
             return;
 
-        if (event.getBlock().getType() == Material.ICE)
+
+        FallingBlock block = (FallingBlock) event.getEntity();
+
+        if (block.getBlockData().getMaterial() == Material.PACKED_ICE)
         {
             Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
                 event.getBlock().breakNaturally();
@@ -524,6 +569,9 @@ public class GameListener implements Listener
             GamePlayer caught = Smash.gameplayers.get(p);
             ItemStack item = player.getItemInHand();
             item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 3));
+
+            if (item.getDurability() >= 100)
+                GameListener.arr.remove(player);
 
             Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () ->
                     p.setVelocity(player.getLocation().getDirection().normalize().multiply(caught.getDamage() * -5 - 0.5)), 1);

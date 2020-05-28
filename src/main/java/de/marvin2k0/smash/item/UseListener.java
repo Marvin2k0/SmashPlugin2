@@ -2,6 +2,7 @@ package de.marvin2k0.smash.item;
 
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.game.Game;
+import de.marvin2k0.smash.game.GameListener;
 import de.marvin2k0.smash.game.GamePlayer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -48,12 +49,12 @@ public class UseListener implements Listener
         if (event.getItem().getType() != Material.ENDER_PEARL)
             event.setCancelled(true);
 
-        try
+
+        if (GameListener.arr.contains(player))
         {
-            smashItem.onUse(gp, event.getAction());
+            GameListener.arr.remove(player);
         }
-        catch (NullPointerException ignored)
-        {
-        }
+
+        smashItem.onUse(gp, event.getAction());
     }
 }

@@ -37,6 +37,7 @@ public class Game
     private final String name;
     private boolean hasStarted;
     public boolean inGame;
+    private Objective liveObj;
     private int lastLoc;
     public GamePlayer hunter;
     private CountdownTimer timer;
@@ -52,6 +53,8 @@ public class Game
         this.ranked = ranked;
         this.inGame = false;
         this.lastLoc = -1;
+        this.liveObj = scoreboard.registerNewObjective("§9Leben", "dummy");
+        this.liveObj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
     }
@@ -86,7 +89,7 @@ public class Game
 
         players.add(player);
 
-        GamePlayer gamePlayer = new GamePlayer(this, player, player.getLocation(), player.getInventory().getContents());
+        GamePlayer gamePlayer = new GamePlayer(this, player, player.getLocation(), player.getInventory().getContents(), player.getLevel());
         gamePlayer.setGame(this);
         gameplayers.add(gamePlayer);
         gamePlayer.inLobby = true;
@@ -96,6 +99,7 @@ public class Game
         player.getInventory().clear();
         player.setFoodLevel(20);
         player.setHealth(player.getHealthScale());
+        player.setLevel(0);
         player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
         player.setGameMode(GameMode.SURVIVAL);
 
@@ -107,20 +111,18 @@ public class Game
 
     public void reset()
     {
-        Location spawn = Locations.get("games." + getName() + ".lobby");
+        Location spawn = Locations.get("games." + getName() + ".spawn");
 
-        for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 50, 50, 50))
+        for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 75, 20, 75))
         {
             if (!(e instanceof Player))
                 e.remove();
         }
 
-        for (Player player : players)
-        {
-            leave(player, false);
-        }
-
         resetBlocks();
+
+        for (Player player : players)
+            leave(player, false);
 
         gameplayers.clear();
         players.clear();
@@ -145,25 +147,38 @@ public class Game
 
     private void check()
     {
-        if (gameplayers.size() == 1)
+        if (gameplayers.size() <= 1)
         {
-            String winner = gameplayers.get(0).getName();
-
-            for (Player player : players)
+            if (gameplayers.size() != 0)
             {
-                player.sendTitle(Text.get("wintitle", false).replace("%player%", winner), Text.get("winsubtitle", false).replace("%player%", winner), 20, 100, 20);
+                String winner = gameplayers.get(0).getName();
+
+                for (Player player : players)
+                {
+                    player.sendTitle(Text.get("wintitle", false).replace("%player%", winner), Text.get("winsubtitle", false).replace("%player%", winner), 20, 100, 20);
+                }
             }
 
             reset();
         }
-        else if (gameplayers.size() <= 0)
-            reset();
     }
 
-    public void die(GamePlayer gp, GamePlayer killer)
+    public int getLevel()
+    {
+        int level = 5;
+
+        if (config.isSet("games." + getName() + ".level"))
+            level = config.getInt("games." + getName() + ".level");
+
+        return level;
+    }
+
+    public void die(GamePlayer gp)
     {
         gp.reduceLives();
         gp.addDamage(-gp.getDamage());
+        liveObj.getScore("§7" + gp.getName()).setScore(gp.getLives());
+        GameListener.arr.remove(gp.getPlayer());
 
         if (ranked)
         {
@@ -173,21 +188,22 @@ public class Game
             {
                 gp.getLastDamage().addKill();
                 gp.getLastDamage().sendMessage(Text.get("killed").replace("%player%", gp.getName()));
+                gp.setLastDamage(null);
             }
         }
 
         if (gp.getLives() <= 0)
         {
             gp.getPlayer().setGameMode(GameMode.SPECTATOR);
-            gp.getPlayer().spigot().respawn();
+            gp.getPlayer().getInventory().clear();
             gameplayers.remove(gp);
             check();
         }
         else
         {
+            gp.getPlayer().spigot().respawn();
             gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
             giveItems(gp);
-            gp.getPlayer().spigot().respawn();
         }
     }
 
@@ -224,29 +240,7 @@ public class Game
     }
 
     String[] smashItems = {
-            "singularity", "singularity", "singularity", "singularity", "singularity",
-            "launcher", "launcher",
-            "reset",
-            "tnt", "tnt", "tnt",
-            "monster", "monster", "monster", "monster", "monster", "monster", "monster", "monster",
-            "ice", "ice", "ice", "ice",
-            "rod", "rod", "rod", "rod", "rod",
-            "shotbow", "shotbow", "shotbow",
-            "bow", "bow", "bow", "bow",
-            "jetpack", "jetpack", "jetpack",
-            "flower", "flower", "flower", "flower", "flower",
-            "soup", "soup", "soup",
-            "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl", "pearl",
-            "dia",
-            "gold", "gold", "gold", "gold", "gold", "gold", "gold",
-            "iron", "iron", "iron",
-            "stone", "stone", "stone", "stone", "stone",
-            "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood", "wood",
-            "sugar", "sugar", "sugar", "sugar", "sugar",
-            "apple", "apple", "apple", "apple", "apple",
-            "bread", "bread", "bread", "bread", "bread",
-            "chicken", "chicken", "chicken", "chicken", "chicken",
-            "pork", "steak", "pork", "steak", "pork", "steak", "pork", "steak", "pork", "steak"
+            "ice"
     };
 
     Random random = new Random();
@@ -346,6 +340,7 @@ public class Game
     private void giveItems(GamePlayer gp)
     {
         ItemStack schutz = ItemUtils.create(Material.GLASS, Text.get("schutzitem", false));
+        gp.getPlayer().getInventory().clear();
         gp.getPlayer().getInventory().setItem(8, schutz);
     }
 
@@ -355,6 +350,7 @@ public class Game
 
         objective.setDisplayName("%");
         objective.getScore(name).setScore(0);
+        liveObj.getScore("§7" + gp.getName()).setScore(gp.getLives());
 
         gp.getPlayer().setScoreboard(scoreboard);
     }

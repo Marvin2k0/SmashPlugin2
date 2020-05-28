@@ -16,3 +16,5 @@ commands:
     permission: smash.setranked
   stats:
     permission: smash.stats
+  setylevel:
+    permission: smash.level

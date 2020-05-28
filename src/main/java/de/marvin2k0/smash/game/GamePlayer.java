@@ -26,14 +26,16 @@ public class GamePlayer
     private long cooldown;
     public boolean inLobby = true;
     public int lives;
+    public int level;
 
-    public GamePlayer(Game game, Player player, Location location, ItemStack[] inventory)
+    public GamePlayer(Game game, Player player, Location location, ItemStack[] inventory, int level)
     {
         this.game = game;
         this.player = player;
         this.location = location;
         this.inventory = inventory;
         this.cooldown = 0;
+        this.level = level;
         this.lastDamage = null;
         this.damage = 0;
         this.lives = Integer.parseInt(Text.get("lives", false));
@@ -59,6 +61,7 @@ public class GamePlayer
         if (this.damage < 0)
             this.damage = 0;
 
+        player.setLevel((int) (this.damage * 100));
         Game.objective.getScore(player.getName()).setScore((int) (getDamage() * 100));
     }
 
@@ -82,6 +85,7 @@ public class GamePlayer
         player.teleport(location);
         player.getInventory().clear();
         player.getInventory().setContents(inventory);
+        player.setLevel(level);
     }
 
     public void addKill()

@@ -23,6 +23,8 @@ public class Smash extends JavaPlugin
     public static HashMap<Player, GamePlayer> gameplayers = new HashMap<>();
     public static Smash plugin;
 
+    public static boolean ondisable = false;
+
     //TODO: spawn items, 10 sec protection phase, health, cmd -> /setdrop <game>
     @Override
     public void onEnable()
@@ -41,6 +43,7 @@ public class Smash extends JavaPlugin
         getCommand("leave").setExecutor(this);
         getCommand("stats").setExecutor(this);
         getCommand("setranked").setExecutor(this);
+        getCommand("setylevel").setExecutor(this);
 
         getServer().getPluginManager().registerEvents(new SignListener(), this);
         getServer().getPluginManager().registerEvents(new UseListener(), this);
@@ -50,6 +53,8 @@ public class Smash extends JavaPlugin
     @Override
     public void onDisable()
     {
+        ondisable = true;
+
         for (Game g : Game.games)
             g.reset();
     }
@@ -97,7 +102,7 @@ public class Smash extends JavaPlugin
             return true;
         }
 
-        else if (label.equals("setranked"))
+        else if (label.equalsIgnoreCase("setranked"))
         {
             if (args.length != 2)
             {
@@ -109,6 +114,24 @@ public class Smash extends JavaPlugin
 
             getConfig().set("games." + args[0] + ".ranked", ranked);
             saveConfig();
+            player.sendMessage("§7Einstellung erfolgreich geändert!");
+            return true;
+        }
+
+        else if (label.equalsIgnoreCase("setylevel"))
+        {
+            if (args.length != 2)
+            {
+                player.sendMessage("§cUsage: /setylevel <game> <Y-Koordinate>");
+                return true;
+            }
+
+            int y = Integer.parseInt(args[1]);
+
+            getConfig().set("games." + args[0] + ".level", y);
+            saveConfig();
+
+            player.sendMessage("§7Einstellung erfolgreich geändert!");
             return true;
         }
 

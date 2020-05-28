@@ -27,7 +27,6 @@ public class Text
         Text.config = plugin.getConfig();
 
         config.options().copyDefaults(true);
-        config.addDefault("chars.Marvin2k0.name", "Developer");
         config.addDefault("prefix", "&8[&9Smash&8]&f");
         config.addDefault("kills", "&9%player% &7hat &9%kills% &7kills.");
         config.addDefault("deaths", "&9%player% &7hat &9%deaths% &7deaths.");
