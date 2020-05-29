@@ -53,7 +53,7 @@ public class Game
         this.ranked = ranked;
         this.inGame = false;
         this.lastLoc = -1;
-        this.liveObj = scoreboard.registerNewObjective("§9Leben", "dummy");
+        this.liveObj = scoreboard.registerNewObjective(getName(), "", "§9Leben");
         this.liveObj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         objective.setDisplaySlot(DisplaySlot.BELOW_NAME);

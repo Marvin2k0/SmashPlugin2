@@ -130,6 +130,7 @@ public class Smash extends JavaPlugin
 
             getConfig().set("games." + args[0] + ".level", y);
             saveConfig();
+            reloadConfig();
 
             player.sendMessage("§7Einstellung erfolgreich geändert!");
             return true;
