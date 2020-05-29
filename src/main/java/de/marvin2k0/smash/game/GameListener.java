@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
@@ -506,13 +507,30 @@ public class GameListener implements Listener
         if (!game.inGame)
             return;
 
-        if (arr.contains(player))
+        if (getFullSlots(player) >= 2)
         {
             event.setCancelled(true);
             return;
         }
 
         arr.add(player);
+    }
+
+    public int getFullSlots(Player p)
+    {
+        Inventory inventory = p.getInventory();
+        ItemStack[] cont = inventory.getContents();
+        int i = 0;
+
+        for (ItemStack item : cont)
+        {
+            if (item != null && item.getType() != Material.AIR)
+            {
+                i++;
+            }
+        }
+
+        return i;
     }
 
     @EventHandler
