@@ -240,6 +240,29 @@ public class Game
     }
 
     String[] smashItems = {
+            "singularity",
+            "launcher",
+            "reset",
+            "tnt",
+            "monster",
+            "ice",
+            "rod",
+            "shotbow",
+            "bow",
+            "jetpack",
+            "flower",
+            "soup",
+            "pearl",
+            "dia",
+            "gold",
+            "iron",
+            "stone",
+            "wood",
+            "sugar",
+            "apple",
+            "bread",
+            "chicken",
+            "pork",
             "ice"
     };
 
