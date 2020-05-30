@@ -453,6 +453,13 @@ public class GameListener implements Listener
             Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> cooldown.remove(gp), 10 * 20);
         }
 
+        if ((player.getLocation().getBlock().getType() == Material.LAVA) || (player.getLocation().getBlock().getType() == Material.LEGACY_STATIONARY_LAVA))
+        {
+            death(player);
+            player.setFireTicks(0);
+            return;
+        }
+
         Game game = Smash.gameplayers.get(player).getGame();
 
         if (player.getLocation().getY() <= game.getLevel())
