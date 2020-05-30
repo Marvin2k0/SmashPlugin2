@@ -270,6 +270,7 @@ public class Game
             team.addPlayer(gp.getPlayer());
             gp.getPlayer().setAllowFlight(true);
             gp.getPlayer().getInventory().clear();
+            gp.getPlayer().setLevel(0);
             setDamageTag(gp);
             giveItems(gp);
 
@@ -482,6 +483,10 @@ public class Game
             sendMessage(Text.get("countdown").replace("%seconds%", seconds + ""));
         else if (seconds % 5 == 0)
             sendMessage(Text.get("countdown").replace("%seconds%", seconds + ""));
+
+        for (Player player : players)
+            player.setLevel(seconds);
+
     }
 
     public void leave(GamePlayer gp)
