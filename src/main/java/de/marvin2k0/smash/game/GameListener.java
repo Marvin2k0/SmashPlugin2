@@ -24,12 +24,14 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GameListener implements Listener
 {
     private ArrayList<Player> jump = new ArrayList<>();
     private ArrayList<GamePlayer> cooldown = new ArrayList<>();
     public static ArrayList<Player> arr = new ArrayList<>();
+    private static HashMap<Player, ItemStack[]> invs = new HashMap<>();
 
     @EventHandler
     public void onGrap(PlayerInteractEntityEvent event)
@@ -432,7 +434,7 @@ public class GameListener implements Listener
 
         if (gp.getGame().inGame && player.isOnGround() && !cooldown.contains(gp))
         {
-            if (gp.getGame().itemSpawns.size() >= 10)
+            if (gp.getGame().itemSpawns.size() >= 5)
             {
                 gp.getGame().itemSpawns.remove(0);
             }
@@ -507,19 +509,25 @@ public class GameListener implements Listener
         if (!game.inGame)
             return;
 
+        invs.remove(player);
+        invs.put(player, player.getInventory().getContents());
+
         if (getFullSlots(player) >= 2)
         {
             event.setCancelled(true);
             return;
         }
 
-        arr.add(player);
+        invs.remove(player);
+        invs.put(player, player.getInventory().getContents());
     }
 
     public int getFullSlots(Player p)
     {
-        Inventory inventory = p.getInventory();
-        ItemStack[] cont = inventory.getContents();
+        if (!invs.containsKey(p))
+            invs.put(p, p.getInventory().getContents());
+
+        ItemStack[] cont = invs.get(p);
         int i = 0;
 
         for (ItemStack item : cont)
@@ -648,7 +656,13 @@ public class GameListener implements Listener
         if (!Game.inGame(player))
             return;
 
-        event.setCancelled(true);
+        if (event.getItemDrop().getItemStack().getType() == Material.BOW)
+            player.getInventory().remove(Material.ARROW);
+
+        event.getItemDrop().remove();
+
+        invs.remove(player);
+        invs.put(player, player.getInventory().getContents());
     }
 
     private void explode(EntityExplodeEvent event, Game game)

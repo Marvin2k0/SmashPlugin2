@@ -9,15 +9,13 @@ import de.marvin2k0.smash.utils.ItemUtils;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class Game
 {
@@ -32,6 +30,7 @@ public class Game
     private static final int MAX_PLAYERS = Integer.parseInt(Text.get("maxplayers", false));
 
     public ArrayList<GamePlayer> prot;
+    public ArrayList<Location> signs;
     public HashMap<Location, Material> blocks;
     public ArrayList<Location> itemSpawns;
     private final String name;
@@ -55,6 +54,7 @@ public class Game
         this.lastLoc = -1;
         this.liveObj = scoreboard.registerNewObjective(getName(), "", "§9Leben");
         this.liveObj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        this.signs = loadSigns();
 
         objective.setDisplaySlot(DisplaySlot.BELOW_NAME);
     }
@@ -103,6 +103,18 @@ public class Game
         player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
         player.setGameMode(GameMode.SURVIVAL);
 
+        for (Location loc : signs)
+        {
+            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            {
+                continue;
+            }
+
+            Sign sign = (Sign) loc.getBlock().getState();
+            sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
+            sign.update();
+        }
+
         if (players.size() >= MIN_PLAYERS && !hasStarted)
         {
             start();
@@ -132,6 +144,16 @@ public class Game
         hunter = null;
         hasStarted = false;
         inGame = false;
+
+        for (Location loc : signs)
+        {
+            if (!loc.getBlock().getType().toString().contains("SIGN"))
+                continue;
+
+            Sign sign = (Sign) loc.getBlock().getState();
+            sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
+            sign.update();
+        }
     }
 
     public void resetBlocks()
@@ -179,6 +201,7 @@ public class Game
         gp.addDamage(-gp.getDamage());
         liveObj.getScore("§7" + gp.getName()).setScore(gp.getLives());
         GameListener.arr.remove(gp.getPlayer());
+        gp.getPlayer().getInventory().clear();
 
         if (ranked)
         {
@@ -217,6 +240,18 @@ public class Game
 
         inGame = true;
 
+        for (Location loc : signs)
+        {
+            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            {
+                continue;
+            }
+
+            Sign sign = (Sign) loc.getBlock().getState();
+            sign.setLine(2, "§cIm Spiel");
+            sign.update();
+        }
+
         for (GamePlayer gp : gameplayers)
         {
             team.addPlayer(gp.getPlayer());
@@ -236,7 +271,7 @@ public class Game
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Smash.plugin, () -> {
             if (inGame)
                 spawnItems();
-        }, 0, 10 * 20);
+        }, 0, 5 * 20);
     }
 
     String[] smashItems = {
@@ -354,10 +389,44 @@ public class Game
                 break;
         }
 
-        Location dropLocation = itemSpawns.get(randomLoc);
+        Location randomLocation = itemSpawns.get(randomLoc);
+
+        double x = random.nextInt(10) - 5;
+        double z = random.nextInt(10) - 5;
+        double y = randomLocation.getWorld().getHighestBlockYAt((int) x, (int) z) + 2;
+
+        Location dropLocation = randomLocation.add(x, 0, z);
+        dropLocation.setY(y);
+
         lastLoc = randomLoc;
 
         item.drop(dropLocation);
+
+        SmashItem finalItem = item;
+
+        System.out.println(item.getItem().getItemStack().getType() + " bei " + dropLocation.getX() + " " + dropLocation.getY() + " " + dropLocation.getZ() + " gespawnt");
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> finalItem.getItem().remove(), 50 * 20);
+    }
+
+    public void addSign(Sign sign)
+    {
+        Locations.setLocation("games." + getName() + ".signs." + UUID.randomUUID(), sign.getLocation());
+    }
+
+    private ArrayList<Location> loadSigns()
+    {
+        if (!config.isSet("games." + getName() + ".signs"))
+            return null;
+
+        ArrayList<Location> signs = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : config.getConfigurationSection("games." + getName() + ".signs").getValues(false).entrySet())
+        {
+            signs.add(Locations.get("games." + getName() + ".signs." + entry.getKey()));
+        }
+
+        return signs;
     }
 
     private void giveItems(GamePlayer gp)
@@ -429,6 +498,18 @@ public class Game
         CharacterUtils.setCharacter(gp, gp.getPlayer().getUniqueId().toString());
 
         Smash.gameplayers.remove(gp.getPlayer());
+
+        for (Location loc : signs)
+        {
+            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            {
+                continue;
+            }
+
+            Sign sign = (Sign) loc.getBlock().getState();
+            sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
+            sign.update();
+        }
 
         if (check)
             check();

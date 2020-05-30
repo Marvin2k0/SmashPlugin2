@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.IllegalPluginAccessException;
@@ -20,12 +21,23 @@ import java.util.Map;
 
 public class CharacterUtils
 {
+    private static ArrayList<ItemStack> items = null;
+
+    public static void load()
+    {
+        items = getHeads();
+
+        Inventory inv = Bukkit.createInventory(null, 54, "");
+
+        for (int i = 0; i < items.size(); i++)
+        {
+            inv.setItem(i, items.get(i));
+        }
+    }
 
     public static void openInv(GamePlayer gp)
     {
         Player player = gp.getPlayer();
-
-        ArrayList<ItemStack> items = getHeads();
 
         ScrollerInventory inv = new ScrollerInventory(items, Text.get("charinvname", false), player);
     }
@@ -82,6 +94,12 @@ public class CharacterUtils
     {
         FileConfiguration config = Smash.plugin.getConfig();
         ArrayList<ItemStack> items = new ArrayList<>();
+
+        if (!config.isSet("chars"))
+        {
+            Bukkit.getConsoleSender().sendMessage("§4Bitte lege mindestens einen Charakter in der Config fest!");
+            return new ArrayList<ItemStack>();
+        }
 
         for (Map.Entry<String, Object> entry : config.getConfigurationSection("chars").getValues(false).entrySet())
         {

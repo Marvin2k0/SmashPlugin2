@@ -5,8 +5,10 @@ import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,22 +21,36 @@ public abstract class SmashItem
     public static HashMap<Entity, GamePlayer> entities = new HashMap<>();
 
     protected ItemStack item;
+    private Item itemToRemove;
 
     public SmashItem(ItemStack item)
     {
-        net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound tag = stack.getTag() != null ? stack.getTag() : new NBTTagCompound();
-        tag.setString(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        stack.setTag(tag);
+        try
+        {
+            net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
+            NBTTagCompound tag = stack.getTag() != null ? stack.getTag() : new NBTTagCompound();
+            tag.setString(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            stack.setTag(tag);
 
-        this.item = CraftItemStack.asBukkitCopy(stack);
+            this.item = CraftItemStack.asBukkitCopy(stack);
 
-        items.add(this.item);
-        smashItems.put(this.item, this);
+            items.add(this.item);
+            smashItems.put(this.item, this);
+        }
+        catch (Exception ignored)
+        {
+        }
     }
+
     public void drop(Location loc)
     {
-        loc.getWorld().dropItemNaturally(loc, item);
+        itemToRemove = loc.getWorld().dropItem(loc, item);
+        itemToRemove.setVelocity(new Vector(0, 0, 0));
+    }
+
+    public Item getItem()
+    {
+        return itemToRemove;
     }
 
 

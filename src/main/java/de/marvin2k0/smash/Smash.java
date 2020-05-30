@@ -1,5 +1,6 @@
 package de.marvin2k0.smash;
 
+import de.marvin2k0.smash.characters.CharacterUtils;
 import de.marvin2k0.smash.commands.SmashCommand;
 import de.marvin2k0.smash.game.Game;
 import de.marvin2k0.smash.game.GameListener;
@@ -29,11 +30,15 @@ public class Smash extends JavaPlugin
     @Override
     public void onEnable()
     {
+        plugin = this;
+
         Text.setUp(this);
         Locations.setUp(this);
         UseListener.setUp();
 
-        plugin = this;
+        System.out.println("Loading characters...");
+        CharacterUtils.load();
+        System.out.println("done!");
 
         addGames();
 
@@ -79,9 +84,10 @@ public class Smash extends JavaPlugin
             }
 
             Game.createGame(args[0], false);
+
             Locations.setLocation("games." + args[0] + ".lobby", player.getLocation());
             player.sendMessage(Text.get("lobbyset").replace("%game%", args[0]));
-            saveConfig();
+            reloadConfig();
 
             return true;
         }
@@ -98,6 +104,7 @@ public class Smash extends JavaPlugin
 
             Locations.setLocation("games." + args[0] + ".spawn", player.getLocation());
             player.sendMessage(Text.get("spawnset").replace("%game%", args[0]));
+            reloadConfig();
 
             return true;
         }
@@ -114,6 +121,8 @@ public class Smash extends JavaPlugin
 
             getConfig().set("games." + args[0] + ".ranked", ranked);
             saveConfig();
+            reloadConfig();
+
             player.sendMessage("§7Einstellung erfolgreich geändert!");
             return true;
         }

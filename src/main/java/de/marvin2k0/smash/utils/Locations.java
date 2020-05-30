@@ -34,6 +34,7 @@ public class Locations
         config.set(path + ".pitch", location.getPitch());
 
         plugin.saveConfig();
+        plugin.reloadConfig();
     }
 
     public static void setUp(Plugin plugin)

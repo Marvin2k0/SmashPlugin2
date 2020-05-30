@@ -1,6 +1,7 @@
 package de.marvin2k0.smash.listener;
 
 import de.marvin2k0.smash.game.Game;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -55,8 +56,12 @@ public class SignListener implements Listener
 
             if (line1.equalsIgnoreCase("[Smash]") && !line2.isEmpty() && Game.exists(line2))
             {
+                Game game = Game.getGameFromName(line2);
+                game.addSign((Sign) event.getBlock().getState());
+
                 event.setLine(0, "§9[Smash]");
                 event.setLine(1, "§f" + line2);
+                event.setLine(2, "§a0/" + Text.get("maxplayers", false));
             }
         }
     }
