@@ -25,7 +25,6 @@ public class Game
     public static final ArrayList<Game> games = new ArrayList<>();
     public static final ArrayList<GamePlayer> gameplayers = new ArrayList<>();
     private static final ArrayList<Player> players = new ArrayList<>();
-    private static final FileConfiguration config = Smash.plugin.getConfig();
     private static final int MIN_PLAYERS = Integer.parseInt(Text.get("minplayers", false));
     private static final int MAX_PLAYERS = Integer.parseInt(Text.get("maxplayers", false));
 
@@ -79,9 +78,7 @@ public class Game
             return;
         }
 
-        Smash.plugin.reloadConfig();
-
-        if (!config.isSet("games." + getName() + ".lobby") || !config.isSet("games." + getName() + ".spawn"))
+        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".lobby") || !Smash.plugin.getConfig().isSet("games." + getName() + ".spawn"))
         {
             player.sendMessage(Text.get("lobbynotset"));
             return;
@@ -103,16 +100,19 @@ public class Game
         player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
         player.setGameMode(GameMode.SURVIVAL);
 
-        for (Location loc : signs)
+        if (signs != null)
         {
-            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            for (Location loc : signs)
             {
-                continue;
-            }
+                if (!loc.getBlock().getType().toString().contains("SIGN"))
+                {
+                    continue;
+                }
 
-            Sign sign = (Sign) loc.getBlock().getState();
-            sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
-            sign.update();
+                Sign sign = (Sign) loc.getBlock().getState();
+                sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
+                sign.update();
+            }
         }
 
         if (players.size() >= MIN_PLAYERS && !hasStarted)
@@ -123,7 +123,11 @@ public class Game
 
     public void reset()
     {
+        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".spawn"))
+            return;
+
         Location spawn = Locations.get("games." + getName() + ".spawn");
+
 
         for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 75, 20, 75))
         {
@@ -144,6 +148,12 @@ public class Game
         hunter = null;
         hasStarted = false;
         inGame = false;
+
+        if (timer != null)
+            timer.cancel();
+
+        if (signs == null)
+            return;
 
         for (Location loc : signs)
         {
@@ -189,8 +199,8 @@ public class Game
     {
         int level = 5;
 
-        if (config.isSet("games." + getName() + ".level"))
-            level = config.getInt("games." + getName() + ".level");
+        if (Smash.plugin.getConfig().isSet("games." + getName() + ".level"))
+            level = Smash.plugin.getConfig().getInt("games." + getName() + ".level");
 
         return level;
     }
@@ -240,16 +250,19 @@ public class Game
 
         inGame = true;
 
-        for (Location loc : signs)
+        if (signs != null)
         {
-            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            for (Location loc : signs)
             {
-                continue;
-            }
+                if (!loc.getBlock().getType().toString().contains("SIGN"))
+                {
+                    continue;
+                }
 
-            Sign sign = (Sign) loc.getBlock().getState();
-            sign.setLine(2, "§cIm Spiel");
-            sign.update();
+                Sign sign = (Sign) loc.getBlock().getState();
+                sign.setLine(2, "§cIm Spiel");
+                sign.update();
+            }
         }
 
         for (GamePlayer gp : gameplayers)
@@ -412,16 +425,19 @@ public class Game
     public void addSign(Sign sign)
     {
         Locations.setLocation("games." + getName() + ".signs." + UUID.randomUUID(), sign.getLocation());
+        Smash.plugin.saveConfig();
+
+        signs = loadSigns();
     }
 
     private ArrayList<Location> loadSigns()
     {
-        if (!config.isSet("games." + getName() + ".signs"))
+        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".signs"))
             return null;
 
         ArrayList<Location> signs = new ArrayList<>();
 
-        for (Map.Entry<String, Object> entry : config.getConfigurationSection("games." + getName() + ".signs").getValues(false).entrySet())
+        for (Map.Entry<String, Object> entry : Smash.plugin.getConfig().getConfigurationSection("games." + getName() + ".signs").getValues(false).entrySet())
         {
             signs.add(Locations.get("games." + getName() + ".signs." + entry.getKey()));
         }
@@ -451,7 +467,7 @@ public class Game
     {
         hasStarted = true;
 
-        CountdownTimer timer = new CountdownTimer(Smash.plugin, 30,
+        timer = new CountdownTimer(Smash.plugin, 30,
                 () -> {
                 },
                 () -> startGame(),
@@ -499,16 +515,19 @@ public class Game
 
         Smash.gameplayers.remove(gp.getPlayer());
 
-        for (Location loc : signs)
+        if (signs != null)
         {
-            if (!loc.getBlock().getType().toString().contains("SIGN"))
+            for (Location loc : signs)
             {
-                continue;
-            }
+                if (!loc.getBlock().getType().toString().contains("SIGN"))
+                {
+                    continue;
+                }
 
-            Sign sign = (Sign) loc.getBlock().getState();
-            sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
-            sign.update();
+                Sign sign = (Sign) loc.getBlock().getState();
+                sign.setLine(2, "§a" + players.size() + "/" + Text.get("maxplayers", false));
+                sign.update();
+            }
         }
 
         if (check)

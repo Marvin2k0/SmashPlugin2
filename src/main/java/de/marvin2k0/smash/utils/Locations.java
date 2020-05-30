@@ -1,5 +1,6 @@
 package de.marvin2k0.smash.utils;
 
+import de.marvin2k0.smash.Smash;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -8,38 +9,40 @@ import org.bukkit.plugin.Plugin;
 
 public class Locations
 {
-    private static FileConfiguration config;
     private static Plugin plugin;
 
     public static Location get(String path)
     {
-        World world = Bukkit.getWorld(config.getString(path + ".world"));
+        Smash.plugin.reloadConfig();
 
-        double y = config.getDouble(path + ".y");
-        double x = config.getDouble(path + ".x");
-        double z = config.getDouble(path + ".z");
-        double yaw = config.getDouble(path + ".yaw");
-        double pitch = config.getDouble(path + ".pitch");
+        if (!Smash.plugin.getConfig().isSet(path))
+            return null;
+
+        World world = Bukkit.getWorld(Smash.plugin.getConfig().getString(path + ".world"));
+
+        double y = Smash.plugin.getConfig().getDouble(path + ".y");
+        double x = Smash.plugin.getConfig().getDouble(path + ".x");
+        double z = Smash.plugin.getConfig().getDouble(path + ".z");
+        double yaw = Smash.plugin.getConfig().getDouble(path + ".yaw");
+        double pitch = Smash.plugin.getConfig().getDouble(path + ".pitch");
 
         return new Location(world, x, y, z, (float) yaw, (float) pitch);
     }
 
     public static void setLocation(String path, Location location)
     {
-        config.set(path + ".world", location.getWorld().getName());
-        config.set(path + ".x", location.getX());
-        config.set(path + ".y", location.getY());
-        config.set(path + ".z", location.getZ());
-        config.set(path + ".yaw", location.getYaw());
-        config.set(path + ".pitch", location.getPitch());
+        Smash.plugin.getConfig().set(path + ".world", location.getWorld().getName());
+        Smash.plugin.getConfig().set(path + ".x", location.getX());
+        Smash.plugin.getConfig().set(path + ".y", location.getY());
+        Smash.plugin.getConfig().set(path + ".z", location.getZ());
+        Smash.plugin.getConfig().set(path + ".yaw", location.getYaw());
+        Smash.plugin.getConfig().set(path + ".pitch", location.getPitch());
 
         plugin.saveConfig();
-        plugin.reloadConfig();
     }
 
     public static void setUp(Plugin plugin)
     {
         Locations.plugin = plugin;
-        config = plugin.getConfig();
     }
 }

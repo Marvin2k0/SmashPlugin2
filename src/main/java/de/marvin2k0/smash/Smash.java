@@ -87,7 +87,7 @@ public class Smash extends JavaPlugin
 
             Locations.setLocation("games." + args[0] + ".lobby", player.getLocation());
             player.sendMessage(Text.get("lobbyset").replace("%game%", args[0]));
-            reloadConfig();
+            saveConfig();
 
             return true;
         }
@@ -104,7 +104,7 @@ public class Smash extends JavaPlugin
 
             Locations.setLocation("games." + args[0] + ".spawn", player.getLocation());
             player.sendMessage(Text.get("spawnset").replace("%game%", args[0]));
-            reloadConfig();
+            saveConfig();
 
             return true;
         }

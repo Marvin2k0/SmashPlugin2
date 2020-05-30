@@ -53,6 +53,11 @@ public class CountdownTimer implements Runnable
         return seconds;
     }
 
+    public void cancel()
+    {
+        if (assignedTaskId != null) Bukkit.getScheduler().cancelTask(assignedTaskId);
+    }
+
     public int getSecondsLeft()
     {
         return secondsLeft;
