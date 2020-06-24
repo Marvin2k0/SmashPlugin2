@@ -10,7 +10,6 @@ import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.block.Sign;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.*;
@@ -24,9 +23,10 @@ public class Game
     private static final Team team = scoreboard.registerNewTeam("damage");
     public static final ArrayList<Game> games = new ArrayList<>();
     public static final ArrayList<GamePlayer> gameplayers = new ArrayList<>();
-    private static final ArrayList<Player> players = new ArrayList<>();
+    public static final ArrayList<Player> players = new ArrayList<>();
     private static final int MIN_PLAYERS = Integer.parseInt(Text.get("minplayers", false));
     private static final int MAX_PLAYERS = Integer.parseInt(Text.get("maxplayers", false));
+    private ArrayList<SmashItem> items = new ArrayList<>();
 
     public ArrayList<GamePlayer> prot;
     public ArrayList<Location> signs;
@@ -38,7 +38,7 @@ public class Game
     private Objective liveObj;
     private int lastLoc;
     public GamePlayer hunter;
-    private CountdownTimer timer;
+    public CountdownTimer timer;
     private boolean ranked;
 
     private Game(String name, boolean ranked)
@@ -51,7 +51,7 @@ public class Game
         this.ranked = ranked;
         this.inGame = false;
         this.lastLoc = -1;
-        this.liveObj = scoreboard.registerNewObjective(getName(), "", "§9Leben");
+        this.liveObj = scoreboard.registerNewObjective(getName(), "§9Leben");
         this.liveObj.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.signs = loadSigns();
 
@@ -78,7 +78,7 @@ public class Game
             return;
         }
 
-        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".lobby") || !Smash.plugin.getConfig().isSet("games." + getName() + ".spawn"))
+        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".lobby") || !Smash.plugin.getConfig().isSet("games." + getName() + ".playerspawns"))
         {
             player.sendMessage(Text.get("lobbynotset"));
             return;
@@ -97,7 +97,6 @@ public class Game
         player.setFoodLevel(20);
         player.setHealth(player.getHealthScale());
         player.setLevel(0);
-        player.getInventory().setItem(4, ItemUtils.create(Material.NETHER_STAR, "§9Charakter wählen"));
         player.setGameMode(GameMode.SURVIVAL);
 
         if (signs != null)
@@ -123,11 +122,10 @@ public class Game
 
     public void reset()
     {
-        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".spawn"))
+        if (!Smash.plugin.getConfig().isSet("games." + getName() + ".playerspawns"))
             return;
 
-        Location spawn = Locations.get("games." + getName() + ".spawn");
-
+        Location spawn = getSpawns(0);
 
         for (Entity e : spawn.getWorld().getNearbyEntities(spawn, 75, 20, 75))
         {
@@ -187,7 +185,7 @@ public class Game
 
                 for (Player player : players)
                 {
-                    player.sendTitle(Text.get("wintitle", false).replace("%player%", winner), Text.get("winsubtitle", false).replace("%player%", winner), 20, 100, 20);
+                    player.sendTitle(Text.get("wintitle", false).replace("%player%", winner), Text.get("winsubtitle", false).replace("%player%", winner));
                 }
             }
 
@@ -235,17 +233,48 @@ public class Game
         else
         {
             gp.getPlayer().spigot().respawn();
-            gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+            gp.getPlayer().teleport(getSpawns(0));
             giveItems(gp);
         }
     }
 
-    private void startGame()
+    public void startGame()
     {
         if (gameplayers.size() <= 1)
         {
             reset();
             return;
+        }
+
+        new AppleItem();
+        new BreadItem();
+        new ChickenItem();
+        new DiamondPickaxe();
+        new DiamondSword();
+        new EnderpearlItem();
+        new FireFlowerItem();
+        new GoldenSword();
+        new IronSword();
+        new JetpackItem();
+        new MapReset();
+        new MonsterSpawnItem();
+        new PorkItem();
+        new RodItem();
+        new SingularityItem();
+        new SlowIceItem();
+        new SoupItem();
+        new SpeedSugar();
+        new SteakItem();
+        new StoneSword();
+        new TNTItem();
+        new WoodenSword();
+
+        for (SmashItem smashItem : SmashItem.instances)
+        {
+            if (smashItem.isActivated())
+            {
+                items.add(smashItem);
+            }
         }
 
         inGame = true;
@@ -265,17 +294,21 @@ public class Game
             }
         }
 
+        int i = 0;
+
         for (GamePlayer gp : gameplayers)
         {
             team.addPlayer(gp.getPlayer());
             gp.getPlayer().setAllowFlight(true);
             gp.getPlayer().getInventory().clear();
             gp.getPlayer().setLevel(0);
-            setDamageTag(gp);
+            //setDamageTag(gp);
             giveItems(gp);
 
-            gp.getPlayer().setScoreboard(scoreboard);
-            gp.getPlayer().teleport(Locations.get("games." + getName() + ".spawn"));
+            //gp.getPlayer().setScoreboard(scoreboard);
+            gp.getPlayer().teleport(getSpawns(i));
+
+            i++;
 
             prot.add(gp);
         }
@@ -285,7 +318,7 @@ public class Game
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Smash.plugin, () -> {
             if (inGame)
                 spawnItems();
-        }, 0, 5 * 20);
+        }, 0, Long.parseLong(Text.get("itemsintervall", false)) * 20);
     }
 
     String[] smashItems = {
@@ -296,8 +329,6 @@ public class Game
             "monster",
             "ice",
             "rod",
-            "shotbow",
-            "bow",
             "jetpack",
             "flower",
             "soup",
@@ -319,96 +350,97 @@ public class Game
 
     private void spawnItems()
     {
-        if (itemSpawns.size() == 0)
-            return;
-
-        int randomItem = random.nextInt(smashItems.length);
-        int randomLoc = random.nextInt(itemSpawns.size());
-        String itemName = smashItems[randomItem];
-        SmashItem item = null;
-
-        switch (itemName)
+        try
         {
-            case "singularity":
-                item = new SingularityItem();
-                break;
-            case "launcher":
-                item = new DiamondPickaxe();
-                break;
-            case "reset":
-                item = new MapReset();
-                break;
-            case "tnt":
-                item = new TNTItem();
-                break;
-            case "monster":
-                item = new MonsterSpawnItem();
-                break;
-            case "ice":
-                item = new SlowIceItem();
-                break;
-            case "rod":
-                item = new RodItem();
-                break;
-            case "shotbow":
-                item = new ShotBowItem();
-                break;
-            case "bow":
-                item = new SimpleBowItem();
-                break;
-            case "jetpack":
-                item = new JetpackItem();
-                break;
-            case "flower":
-                item = new FireFlowerItem();
-                break;
-            case "soup":
-                item = new SoupItem();
-                break;
-            case "pearl":
-                item = new EnderpearlItem();
-                break;
-            case "dia":
-                item = new DiamondSword();
-                break;
-            case "gold":
-                item = new GoldenSword();
-                break;
-            case "iron":
-                item = new IronSword();
-                break;
-            case "sugar":
-                item = new SpeedSugar();
-                break;
-            case "stone":
-                item = new StoneSword();
-                break;
-            case "wood":
-                item = new WoodenSword();
-                break;
-            case "apple":
-                item = new AppleItem();
-                break;
-            case "bread":
-                item = new BreadItem();
-                break;
-            case "chicken":
-                item = new ChickenItem();
-                break;
-            case "pork":
-                item = new PorkItem();
-                break;
-            case "steak":
-                item = new SteakItem();
-                break;
-        }
+            if (itemSpawns.size() == 0)
+            {
+                return;
+            }
 
-        Location randomLocation = itemSpawns.get(randomLoc);
+            int randomItem = random.nextInt(smashItems.length);
+            int randomLoc = random.nextInt(itemSpawns.size());
+            SmashItem item = null;
+            item = items.get(random.nextInt(smashItems.length - 1));
 
-        double x = random.nextInt(10) - 5;
-        double z = random.nextInt(10) - 5;
-        double y = randomLocation.getWorld().getHighestBlockYAt((int) x, (int) z) + 2;
+            /*
+            switch (itemName)
+            {
+                case "singularity":
+                    item = new SingularityItem();
+                    break;
+                case "launcher":
+                    item = new DiamondPickaxe();
+                    break;
+                case "reset":
+                    item = new MapReset();
+                    break;
+                case "tnt":
+                    item = new TNTItem();
+                    break;
+                case "monster":
+                    item = new MonsterSpawnItem();
+                    break;
+                case "ice":
+                    item = new SlowIceItem();
+                    break;
+                case "rod":
+                    item = new RodItem();
+                    break;
+                case "jetpack":
+                    item = new JetpackItem();
+                    break;
+                case "flower":
+                    item = new FireFlowerItem();
+                    break;
+                case "soup":
+                    item = new SoupItem();
+                    break;
+                case "pearl":
+                    item = new EnderpearlItem();
+                    break;
+                case "dia":
+                    item = new DiamondSword();
+                    break;
+                case "gold":
+                    item = new GoldenSword();
+                    break;
+                case "iron":
+                    item = new IronSword();
+                    break;
+                case "sugar":
+                    item = new SpeedSugar();
+                    break;
+                case "stone":
+                    item = new StoneSword();
+                    break;
+                case "wood":
+                    item = new WoodenSword();
+                    break;
+                case "apple":
+                    item = new AppleItem();
+                    break;
+                case "bread":
+                    item = new BreadItem();
+                    break;
+                case "chicken":
+                    item = new ChickenItem();
+                    break;
+                case "pork":
+                    item = new PorkItem();
+                    break;
+                case "steak":
+                    item = new SteakItem();
+                    break;
+                default:
+                    item = new SteakItem();
+                    break;
+            }
+             */
 
+            Location randomLocation = itemSpawns.get(randomLoc);
+            item.drop(randomLocation);
+
+        /*
         Location dropLocation = randomLocation.add(x, 0, z);
         dropLocation.setY(y);
 
@@ -418,9 +450,41 @@ public class Game
 
         SmashItem finalItem = item;
 
-        System.out.println(item.getItem().getItemStack().getType() + " bei " + dropLocation.getX() + " " + dropLocation.getY() + " " + dropLocation.getZ() + " gespawnt");
+        System.out.println(item.getItem().getItemStack().getType() + " in Welt " + dropLocation.getWorld().getName() + " bei " + dropLocation.getX() + " " + dropLocation.getY() + " " + dropLocation.getZ() + " gespawnt");
+        */
+            SmashItem finalItem = item;
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> finalItem.getItem().remove(), 50 * 20);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> finalItem.getItem().remove(), 30 * 20);
+        }
+        catch (Exception ignored)
+        {
+        }
+    }
+
+    private Location getSpawns(int i)
+    {
+        Location loc = null;
+
+        ArrayList<String> spawns = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : Smash.plugin.getConfig().getConfigurationSection("games." + getName() + ".playerspawns").getValues(false).entrySet())
+        {
+            spawns.add(entry.getKey());
+
+            System.out.println("added " + entry.getKey());
+        }
+
+        loc = Locations.get("games." + getName() + ".playerspawns." + spawns.get(i > (spawns.size() - 1) ? 0 : i));
+
+        return loc;
+    }
+
+    public void addLocation(Location loc, boolean init)
+    {
+        this.itemSpawns.add(loc);
+
+        if (!init)
+            Locations.setLocation("games." + getName() + ".spawns." + UUID.randomUUID().toString(), loc);
     }
 
     public void addSign(Sign sign)
@@ -535,7 +599,7 @@ public class Game
             }
         }
 
-        if (check)
+        if (check && inGame)
             check();
     }
 

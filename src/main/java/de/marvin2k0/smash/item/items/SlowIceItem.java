@@ -2,6 +2,8 @@ package de.marvin2k0.smash.item.items;
 
 import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.utils.ItemUtils;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.FallingBlock;
@@ -12,7 +14,7 @@ public class SlowIceItem extends SmashItem
 {
     public SlowIceItem()
     {
-        super(new ItemStack(Material.PACKED_ICE));
+        super(ItemUtils.create(Material.PACKED_ICE, Text.get("items.ice.name", false)), Boolean.valueOf(Text.get("items.ice.activated", false)));
     }
 
     @Override

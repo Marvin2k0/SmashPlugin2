@@ -2,6 +2,8 @@ package de.marvin2k0.smash.item.items;
 
 import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.utils.ItemUtils;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
@@ -13,7 +15,7 @@ public class FireFlowerItem extends SmashItem
 {
     public FireFlowerItem()
     {
-        super(new ItemStack(Material.POPPY));
+        super(ItemUtils.create(Material.getMaterial(38), Text.get("items.flower.name", false)), Boolean.valueOf(Text.get("items.flower.activated", false)));
     }
 
     int max = 5;

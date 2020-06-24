@@ -4,6 +4,8 @@ import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.game.Game;
 import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.utils.ItemUtils;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -21,13 +23,13 @@ public class TNTItem extends SmashItem
 
     public TNTItem()
     {
-        super(new ItemStack(Material.TNT));
+        super(ItemUtils.create(Material.TNT, Text.get("items.tnt.name", false)), Boolean.valueOf(Text.get("items.tnt.activated", false)));
     }
 
     public void onUse(GamePlayer player, Action action)
     {
         player.getPlayer().setItemInHand(null);
-        Location interacted = player.getPlayer().getTargetBlockExact(8).getLocation();
+        Location interacted = player.getPlayer().getTargetBlock(nullMap, 8).getLocation();
 
         for (int x = 0; x < 2; x++)
         {

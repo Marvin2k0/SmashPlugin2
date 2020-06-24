@@ -9,10 +9,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class FoodItem extends SmashItem
 {
-    public FoodItem(Material type)
+    public FoodItem(ItemStack item, boolean flag)
     {
-        super(new ItemStack(type));
+        super(item, flag);
     }
+
     @Override
     public void onUse(GamePlayer player, Action action)
     {

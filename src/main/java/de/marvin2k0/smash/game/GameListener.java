@@ -5,8 +5,15 @@ import de.marvin2k0.smash.characters.CharacterUtils;
 import de.marvin2k0.smash.item.SmashItem;
 import de.marvin2k0.smash.utils.Locations;
 import de.marvin2k0.smash.utils.Text;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.EntityArrow;
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.PacketPlayOutBlockBreakAnimation;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftArrow;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,6 +32,8 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 public class GameListener implements Listener
 {
@@ -32,6 +41,11 @@ public class GameListener implements Listener
     private ArrayList<GamePlayer> cooldown = new ArrayList<>();
     public static ArrayList<Player> arr = new ArrayList<>();
     private static HashMap<Player, ItemStack[]> invs = new HashMap<>();
+    public static ArrayList<Player> glowing = new ArrayList<>();
+    private static HashMap<Player, Double> veloc = new HashMap<>();
+    private static Random random = new Random();
+    private static HashMap<Location, Integer> damages = new HashMap<>();
+    private ArrayList<Player> passenger = new ArrayList<>();
 
     @EventHandler
     public void onGrap(PlayerInteractEntityEvent event)
@@ -57,7 +71,13 @@ public class GameListener implements Listener
         if (!Game.inGame(target))
             return;
 
+        if (passenger.contains(player))
+            return;
+
+        passenger.add(player);
         player.setPassenger(target);
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> passenger.remove(player), Integer.parseInt(Text.get("pickupcooldown", false)) * 20);
     }
 
     @EventHandler
@@ -131,7 +151,7 @@ public class GameListener implements Listener
 
                 explode(event, gp.getGame());
             }
-            else if (event.getEntity().getCustomName().equals("§9Mob"))
+            else if (event.getEntity().getCustomName() != null && event.getEntity().getCustomName().equals("§9Mob"))
             {
                 GamePlayer gp = SmashItem.entities.get(event.getEntity());
 
@@ -142,7 +162,7 @@ public class GameListener implements Listener
             }
         }
 
-        event.getLocation().getWorld().playSound(event.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+        event.getLocation().getWorld().playSound(event.getLocation(), Sound.EXPLODE, 1, 1);
     }
 
     public void death(Player player)
@@ -186,7 +206,7 @@ public class GameListener implements Listener
 
         GamePlayer gp = Smash.gameplayers.get(player);
 
-        if (player.isGlowing() && event.getCause() != EntityDamageEvent.DamageCause.VOID)
+        if (glowing.contains(player) && event.getCause() != EntityDamageEvent.DamageCause.VOID)
         {
             event.setCancelled(true);
             return;
@@ -201,8 +221,6 @@ public class GameListener implements Listener
     {
         if (!(event.getEntity() instanceof Player))
             return;
-
-        ItemStack item = null;
 
         Player player = (Player) event.getEntity();
 
@@ -219,27 +237,29 @@ public class GameListener implements Listener
 
         event.setDamage(0);
 
-        if (player.isGlowing())
+        if (glowing.contains(player))
             return;
 
         double damage = 0;
+
+        ItemStack item = null;
 
         if (event.getDamager() instanceof Player)
         {
             Player damager = (Player) event.getDamager();
 
-            if (damager.getItemInHand() != null && damager.getItemInHand().hasItemMeta())
+            if (damager.getItemInHand() != null)
                 item = damager.getItemInHand();
 
-            for (Entity e : damager.getPassengers())
+            if (damager.getPassenger() instanceof Player)
             {
-                if (!(e instanceof Player))
-                    continue;
+                final Player passenger = (Player) damager.getPassenger();
 
-                final Player p = (Player) e;
-
-                if (p.getUniqueId().equals(player.getUniqueId()))
-                    damager.removePassenger(p);
+                if (passenger.getUniqueId().equals(player.getUniqueId()))
+                {
+                    damager.eject();
+                    passenger.eject();
+                }
             }
 
             if (Game.inGame(damager))
@@ -255,7 +275,6 @@ public class GameListener implements Listener
                         if (gp.getLastDamage() != lastdamage)
                         {
                             this.cancel();
-                            return;
                         }
 
                         gp.setLastDamage(null);
@@ -271,6 +290,7 @@ public class GameListener implements Listener
 
         if (item != null)
         {
+
             if (item.getType() == Material.DIAMOND_SWORD)
             {
                 damage = 0.16;
@@ -279,7 +299,7 @@ public class GameListener implements Listener
                 if (item.getDurability() >= 100)
                     GameListener.arr.remove(player);
             }
-            else if (item.getType() == Material.WOODEN_SWORD || item.getType() == Material.GOLDEN_SWORD)
+            else if (item.getType() == Material.WOOD_SWORD || item.getType() == Material.GOLD_SWORD)
             {
                 damage = 0.1;
                 item.setDurability((short) (item.getDurability() + item.getType().getMaxDurability() / 4));
@@ -338,18 +358,26 @@ public class GameListener implements Listener
             for (int i = 0; i < 9; i++)
             {
                 Arrow arrow = player.launchProjectile(Arrow.class);
-                arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+
+                net.minecraft.server.v1_8_R3.EntityArrow entityArrow = ((CraftArrow) arrow).getHandle();
+                NBTTagCompound tag = entityArrow.getNBTTag();
+
+                if (tag == null)
+                {
+                    tag = new NBTTagCompound();
+                }
+
+                entityArrow.c(tag);
+                boolean canPickup = tag.getByte("pickup") == (byte) 1;
+                entityArrow.f(tag);
             }
         }
     }
 
     @EventHandler
-    public void onPickUp(EntityPickupItemEvent event)
+    public void onPickUp(PlayerPickupItemEvent event)
     {
-        if (!(event.getEntity() instanceof Player))
-            return;
-
-        Player player = (Player) event.getEntity();
+        Player player = event.getPlayer();
 
         if (!Game.inGame(player))
             return;
@@ -372,6 +400,18 @@ public class GameListener implements Listener
             player.updateInventory();
 
         }, 5);
+
+        invs.remove(player);
+        invs.put(player, player.getInventory().getContents());
+
+        if (getFullSlots(player) >= 2)
+        {
+            event.setCancelled(true);
+            return;
+        }
+
+        invs.remove(player);
+        invs.put(player, player.getInventory().getContents());
     }
 
     @EventHandler
@@ -432,28 +472,82 @@ public class GameListener implements Listener
 
         GamePlayer gp = Smash.gameplayers.get(player);
 
-        if (gp.getGame().inGame && player.isOnGround() && !cooldown.contains(gp))
+        if (!player.isOnGround())
         {
-            if (gp.getGame().itemSpawns.size() >= 5)
+            if (!veloc.containsKey(player))
             {
-                gp.getGame().itemSpawns.remove(0);
+                double x = Math.abs(player.getVelocity().getX());
+                double y = Math.abs(player.getVelocity().getY());
+                double z = Math.abs(player.getVelocity().getZ());
+
+                double highest = x;
+
+                if (y > x)
+                    highest = y;
+                if (z > y)
+                    highest = z;
+
+                veloc.put(player, highest);
             }
-
-            Location location = player.getLocation();
-
-            for (Location loc : gp.getGame().itemSpawns)
+            else
             {
-                if (loc.distance(location) <= 8)
-                    break;
+                double x = Math.abs(player.getVelocity().getX());
+                double y = Math.abs(player.getVelocity().getY());
+                double z = Math.abs(player.getVelocity().getZ());
+
+                double highest = veloc.get(player);
+
+                if (x > highest)
+                    highest = x;
+                if (y > highest)
+                    highest = y;
+                if (z > highest)
+                    highest = z;
+
+                veloc.put(player, highest);
             }
+        }
+        else
+        {
+            if (veloc.get(player) != null)
+            {
+                double value = veloc.get(player);
 
-            cooldown.add(gp);
-            gp.getGame().itemSpawns.add(player.getLocation());
+                if (value >= Double.parseDouble(Text.get("break-sensitivity", false)))
+                {
+                    Location loc = player.getLocation().subtract(0, 1, 0);
 
-            Bukkit.getScheduler().scheduleSyncDelayedTask(Smash.plugin, () -> cooldown.remove(gp), 10 * 20);
+                    for (Block b : getBlocks(loc))
+                    {
+                        Location blockLoc = b.getLocation();
+                        int damage = 1;
+
+                        if (damages.containsKey(blockLoc))
+                        {
+                            damage = damages.get(blockLoc) + 1;
+                        }
+
+                        damages.put(blockLoc, damage);
+
+                        int id = random.nextInt(Integer.MAX_VALUE);
+
+                        PacketPlayOutBlockBreakAnimation packet = new PacketPlayOutBlockBreakAnimation(id, new BlockPosition(b.getX(), b.getY(), b.getZ()), damage);
+                        int dimension = ((CraftWorld) player.getWorld()).getHandle().dimension;
+                        ((CraftServer) player.getServer()).getHandle().sendPacketNearby(b.getX(), b.getY(), b.getZ(), 120, dimension, packet);
+
+                        if (damage >= 9)
+                        {
+                            gp.getGame().blocks.put(b.getLocation(), b.getType());
+                            b.setType(Material.AIR);
+                        }
+                    }
+                }
+
+                veloc.remove(player);
+            }
         }
 
-        if ((player.getLocation().getBlock().getType() == Material.LAVA) || (player.getLocation().getBlock().getType() == Material.LEGACY_STATIONARY_LAVA))
+        if ((player.getLocation().getBlock().getType() == Material.LAVA) || (player.getLocation().getBlock().getType() == Material.STATIONARY_LAVA))
         {
             death(player);
             player.setFireTicks(0);
@@ -462,10 +556,31 @@ public class GameListener implements Listener
 
         Game game = Smash.gameplayers.get(player).getGame();
 
-        if (player.getLocation().getY() <= game.getLevel())
+        if (player.getLocation().getY() <= game.getLevel() && game.inGame)
         {
             death(player);
         }
+    }
+
+    private ArrayList<Block> getBlocks(Location loc)
+    {
+        ArrayList<Block> list = new ArrayList<>();
+
+        list.add(loc.getBlock());
+
+        for (int i = 0; i < 5; i++)
+        {
+            int x = random.nextInt(4) - 2 + (int) loc.getX();
+            int z = random.nextInt(4) - 2 + (int) loc.getZ();
+            int y = loc.getWorld().getHighestBlockYAt(x, z) - 1;
+
+            if (!loc.getWorld().getBlockAt(x, y, z).getType().isBlock())
+                continue;
+
+            list.add(loc.getWorld().getBlockAt(x, y, z));
+        }
+
+        return list;
     }
 
     @EventHandler
@@ -502,33 +617,6 @@ public class GameListener implements Listener
         }
     }
 
-    @EventHandler
-    public void onPickUp(PlayerPickupItemEvent event)
-    {
-        Player player = event.getPlayer();
-
-        if (!Game.inGame(player))
-            return;
-
-        GamePlayer gp = Smash.gameplayers.get(player);
-        Game game = gp.getGame();
-
-        if (!game.inGame)
-            return;
-
-        invs.remove(player);
-        invs.put(player, player.getInventory().getContents());
-
-        if (getFullSlots(player) >= 2)
-        {
-            event.setCancelled(true);
-            return;
-        }
-
-        invs.remove(player);
-        invs.put(player, player.getInventory().getContents());
-    }
-
     public int getFullSlots(Player p)
     {
         if (!invs.containsKey(p))
@@ -559,12 +647,12 @@ public class GameListener implements Listener
 
         FallingBlock block = (FallingBlock) event.getEntity();
 
-        if (block.getBlockData().getMaterial() == Material.PACKED_ICE)
+        if (block.getMaterial() == Material.PACKED_ICE)
         {
             Bukkit.getScheduler().runTaskLater(Smash.plugin, () -> {
                 event.getBlock().breakNaturally();
                 Location loc = event.getBlock().getLocation();
-                loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1, 1);
+                loc.getWorld().playSound(loc, Sound.GLASS, 1, 1);
 
                 for (Entity e : loc.getWorld().getNearbyEntities(loc, 4, 4, 4))
                 {
@@ -644,10 +732,10 @@ public class GameListener implements Listener
 
         ItemStack item = event.getCurrentItem();
 
-        if (item.getType() == Material.PLAYER_HEAD && event.getView().getTitle().equals(Text.get("charinvname", false)))
+        if (item.getType() == Material.SKULL_ITEM && event.getView().getTitle().equals(Text.get("charinvname", false)))
         {
             SkullMeta meta = (SkullMeta) item.getItemMeta();
-            String owner = meta.getOwningPlayer().getUniqueId().toString();
+            String owner = Bukkit.getOfflinePlayer(meta.getOwner()).getUniqueId().toString();
 
             CharacterUtils.setCharacter(gp, owner);
         }

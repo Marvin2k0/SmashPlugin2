@@ -3,6 +3,8 @@ package de.marvin2k0.smash.item.items;
 import de.marvin2k0.smash.Smash;
 import de.marvin2k0.smash.game.GamePlayer;
 import de.marvin2k0.smash.item.SmashItem;
+import de.marvin2k0.smash.utils.ItemUtils;
+import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -19,7 +21,7 @@ public class MonsterSpawnItem extends SmashItem
 
     public MonsterSpawnItem()
     {
-        super(new ItemStack(Material.CREEPER_SPAWN_EGG));
+        super(ItemUtils.create(Material.MONSTER_EGG, Text.get("items.spawner.name", false)), Boolean.valueOf(Text.get("items.spawner.activated", false)));
 
         monsters.add(EntityType.BLAZE);
         monsters.add(EntityType.ENDERMITE);
@@ -29,7 +31,6 @@ public class MonsterSpawnItem extends SmashItem
         monsters.add(EntityType.CREEPER);
         monsters.add(EntityType.ENDERMAN);
         monsters.add(EntityType.GHAST);
-        monsters.add(EntityType.PHANTOM);
     }
 
     @Override
@@ -43,7 +44,6 @@ public class MonsterSpawnItem extends SmashItem
         Entity e = player.getPlayer().getLocation().getWorld().spawnEntity(player.getPlayer().getLocation(), monsters.get(index));
         e.setCustomNameVisible(true);
         e.setCustomName("§9Mob");
-        e.setInvulnerable(true);
 
         entities.put(e, player);
 

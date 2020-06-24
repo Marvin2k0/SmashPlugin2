@@ -120,7 +120,7 @@ public class GamePlayer
         {
             this.cooldown = System.currentTimeMillis() + 30 * 1000;
 
-            getPlayer().setGlowing(true);
+            GameListener.glowing.add(player);
             sendMessage(Text.get("schutz"));
 
             new BukkitRunnable()
@@ -128,7 +128,7 @@ public class GamePlayer
                 @Override
                 public void run()
                 {
-                    getPlayer().setGlowing(false);
+                    GameListener.glowing.remove(player);
                 }
             }.runTaskLater(Smash.plugin, 100);
         }

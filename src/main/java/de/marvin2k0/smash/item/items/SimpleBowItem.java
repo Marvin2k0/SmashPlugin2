@@ -6,16 +6,11 @@ import org.bukkit.Material;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 
-public class SimpleBowItem extends SmashItem
+public class SimpleBowItem
 {
     public SimpleBowItem()
     {
-        super(new ItemStack(Material.BOW));
+        //super(new ItemStack(Material.BOW));
     }
 
-    @Override
-    public void onUse(GamePlayer player, Action action)
-    {
-
-    }
 }

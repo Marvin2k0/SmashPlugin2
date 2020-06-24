@@ -9,7 +9,7 @@ import de.marvin2k0.smash.utils.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -110,9 +110,9 @@ public class CharacterUtils
             else
                 name = entry.getKey();
 
-            ItemStack head = ItemUtils.create(Material.PLAYER_HEAD, "§9" + name);
+            ItemStack head = ItemUtils.create(Material.SKULL_ITEM, (byte) 3, "§9" + name);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(entry.getKey()));
+            meta.setOwner(entry.getKey());
             head.setItemMeta(meta);
 
             items.add(head);

@@ -18,3 +18,9 @@ commands:
     permission: smash.stats
   setylevel:
     permission: smash.level
+  setitemspawn:
+    permission: smash.setitemspawn
+  startgame:
+    permission: smash.startgame
+  endgame:
+    permission: smash.endgame
